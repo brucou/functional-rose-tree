@@ -84,5 +84,48 @@ For instance, the tree-like object `{label : 'root', children : [{label:'left'},
 
 [^1]: Bird, Richard (1998). Introduction to Functional Programming using Haskell. Hemel Hempstead, Hertfordshire, UK: Prentice Hall Europe. p. 195. ISBN 0-13-484346-0.
 
-# API
+# Types
+- `Traversal :: BFS | PRE_ORDER | POST_ORDER`
+- `Lenses :: {{getLabel :: T -> E, getChildren :: T -> F, setTree :: ExF -> T}}`
+- `Reducer<A, T, TraversalState> :: A -> TraversalState -> T -> A`
+- `TraverseSpecs :: {{strategy :: Optional<Traversal>, seed : A, visit :: Reducer<A, T, TraversalState> }}`
 
+# API
+## breadthFirstTraverseTree :: Lenses -> TraverseSpecs -> Tree -> A
+### Description
+Traverse a tree breadth-first, applying a reducer while traversing the tree, and returning the 
+final accumulated reduction.
+
+### Types
+- `Tree :: T`
+- `Traversal :: BFS | PRE_ORDER | POST_ORDER`
+- `State :: {{isAdded :: Boolean, isVisited :: Boolean, path :: Array<Number>, ...}}` (extensible
+ record)
+- `TraversalState :: Map<T, State>`
+- `Lenses :: {{getLabel :: T -> E, getChildren :: T -> F, setTree :: ExF -> T}}`
+- `Reducer<A, T, TraversalState> :: A -> TraversalState -> T -> A`
+- `TraverseSpecs :: {{strategy :: Optional<Traversal>, seed : A, visit :: Reducer<A, T, TraversalState> }}`
+
+### Examples
+```javascript
+QUnit.test("main case - breadthFirstTraverseTree", function exec_test(assert) {
+  const actual = breadthFirstTraverseTree(lenses, traverse, tree);
+  const expected = [
+    "root",
+    "left",
+    "middle",
+    "right",
+    "midleft",
+    "midright"
+  ];
+
+  assert.deepEqual(actual, expected, `Fails!`);
+});
+```
+
+## preorderTraverseTree :: 
+## postOrderTraverseTree
+## reduceTree
+## forEachInTree
+## mapOverTree
+## pruneWhen
