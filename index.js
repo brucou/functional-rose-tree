@@ -233,6 +233,7 @@ export function mapOverTree(lenses, mapFn, tree) {
  * predicate will remain in the tree : only the children will be pruned. If it is wanted to prune also the failing
  * node in addition to its children, the `getChildren` function can make use of the second parameter
  * `traversalState` to do so
+ * @param lenses
  * @param {function} predicate
  * @param tree
  * @returns tree
