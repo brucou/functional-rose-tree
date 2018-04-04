@@ -107,7 +107,32 @@ final accumulated reduction.
 - `TraverseSpecs :: {{strategy :: Optional<Traversal>, seed : A, visit :: Reducer<A, T, TraversalState> }}`
 
 ### Examples
+
 ```javascript
+const tree = {
+  label: "root",
+  children: [
+    { label: "left" },
+    {
+      label: "middle",
+      children: [{ label: "midleft" }, { label: "midright" }]
+    },
+    { label: "right" }
+  ]
+};
+
+const lenses = {
+  getChildren: tree => tree.children || []
+};
+
+const traverse = {
+  seed: [],
+  visit: (result, traversalState, tree) => {
+    result.push(tree.label);
+    return result;
+  }
+};
+
 QUnit.test("main case - breadthFirstTraverseTree", function exec_test(assert) {
   const actual = breadthFirstTraverseTree(lenses, traverse, tree);
   const expected = [
@@ -121,7 +146,9 @@ QUnit.test("main case - breadthFirstTraverseTree", function exec_test(assert) {
 
   assert.deepEqual(actual, expected, `Fails!`);
 });
+
 ```
+
 
 ## preorderTraverseTree :: 
 ## postOrderTraverseTree
