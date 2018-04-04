@@ -1,0 +1,20 @@
+{
+  "name": "functional-rose-tree",
+  "author": "Olivier Couriol",
+  "repository": "https://github.com/brucou/functional-rose-tree.git",
+  "version": "0.0.1",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "qunitjs": "^1.20.0",
+    "babel-core": "6.24.1",
+    "rollup": "^0.54.0",
+    "rollup-plugin-babel": "^3.0.3",
+    "rollup-plugin-commonjs": "^8.2.6",
+    "rollup-plugin-node-resolve": "^3.0.2",
+    "rollup-plugin-replace": "^2.0.0",
+    "rollup-plugin-uglify": "^3.0.0"
+  },
+  "dependencies": {
+    "ramda": "^0.25.0"
+  }
+}
