@@ -108,7 +108,7 @@ final accumulated reduction.
 
 ### Examples
 
-```javascript
+```ecmascript 6
 const tree = {
   label: "root",
   children: [
@@ -146,12 +146,72 @@ QUnit.test("main case - breadthFirstTraverseTree", function exec_test(assert) {
 
   assert.deepEqual(actual, expected, `Fails!`);
 });
-
 ```
 
+## preorderTraverseTree :: Lenses -> TraverseSpecs -> Tree -> A
+### Description
+Traverse a tree pre=order depth-first, applying a reducer while traversing the tree, and returning 
+the final accumulated reduction.
 
-## preorderTraverseTree :: 
-## postOrderTraverseTree
+### Types
+- `Tree :: T`
+- `Traversal :: BFS | PRE_ORDER | POST_ORDER`
+- `State :: {{isAdded :: Boolean, isVisited :: Boolean, path :: Array<Number>, ...}}` (extensible
+ record)
+- `TraversalState :: Map<T, State>`
+- `Lenses :: {{getLabel :: T -> E, getChildren :: T -> F, setTree :: ExF -> T}}`
+- `Reducer<A, T, TraversalState> :: A -> TraversalState -> T -> A`
+- `TraverseSpecs :: {{strategy :: Optional<Traversal>, seed : A, visit :: Reducer<A, T, TraversalState> }}`
+
+### Examples
+```ecmascript 6
+QUnit.test("main case - preorderTraverseTree", function exec_test(assert) {
+  const actual = preorderTraverseTree(lenses, traverse, tree);
+  const expected = [
+    "root",
+    "left",
+    "middle",
+    "midleft",
+    "midright",
+    "right"
+  ];
+
+  assert.deepEqual(actual, expected, `Fails!`);
+});
+```
+
+## postOrderTraverseTree :: Lenses -> TraverseSpecs -> Tree -> A
+### Description
+Traverse a tree pre=order depth-first, applying a reducer while traversing the tree, and returning 
+the final accumulated reduction.
+
+### Types
+- `Tree :: T`
+- `Traversal :: BFS | PRE_ORDER | POST_ORDER`
+- `State :: {{isAdded :: Boolean, isVisited :: Boolean, path :: Array<Number>, ...}}` (extensible
+ record)
+- `TraversalState :: Map<T, State>`
+- `Lenses :: {{getLabel :: T -> E, getChildren :: T -> F, setTree :: ExF -> T}}`
+- `Reducer<A, T, TraversalState> :: A -> TraversalState -> T -> A`
+- `TraverseSpecs :: {{strategy :: Optional<Traversal>, seed : A, visit :: Reducer<A, T, TraversalState> }}`
+
+### Examples
+```ecmascript 6
+QUnit.test("main case - postOrderTraverseTree", function exec_test(assert) {
+  const actual = postOrderTraverseTree(lenses, traverse, tree);
+  const expected = [
+    "left",
+    "midleft",
+    "midright",
+    "middle",
+    "right",
+    "root"
+  ];
+
+  assert.deepEqual(actual, expected, `Fails!`);
+});
+```
+
 ## reduceTree
 ## forEachInTree
 ## mapOverTree
