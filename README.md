@@ -106,7 +106,9 @@ final accumulated reduction.
 - `TraverseSpecs :: {{strategy :: Optional<Traversal>, seed : A, visit :: Reducer<A, T, TraversalState> }}`
 
 ### Examples
-
+**NOTE** : for bfs/pre/post-order traversals, we only need the `getChildren` lens. It is a good 
+habit however to define and pass the full`lenses` once and for all.
+ 
 ```ecmascript 6
 const tree = {
   label: "root",
@@ -120,7 +122,6 @@ const tree = {
   ]
 };
 
- NOTE : for traversals, we only need the getChildren lens
 const lenses = {
   getChildren: tree => tree.children || []
 };
