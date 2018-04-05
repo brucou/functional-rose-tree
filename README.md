@@ -37,9 +37,8 @@ At the current state of the library, only the basic operations are implemented.
 # Concepts
 In computing, a multi-way tree or rose tree is a tree data structure with a variable and 
 unbounded number of branches per node[^1]. The name rose tree for this structure is prevalent in 
-the functional programming community, so we use it here.
-
-A rose tree can be defined in Haskell as follows : `data RoseTree a = RoseTree a [RoseTree a]`
+the functional programming community, so we use it here. For instance, a rose tree can be defined
+ in Haskell as follows : `data RoseTree a = RoseTree a [RoseTree a]`.
 
 There is a distinction between a tree as an abstract data type and as a concrete data structure, 
 analogous to the distinction between a list and a linked list. As a data type, a tree has a value
@@ -121,6 +120,7 @@ const tree = {
   ]
 };
 
+ NOTE : for traversals, we only need the getChildren lens
 const lenses = {
   getChildren: tree => tree.children || []
 };
