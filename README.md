@@ -83,11 +83,26 @@ For instance, the tree-like object `{label : 'root', children : [{label:'left'},
 
 [^1]: Bird, Richard (1998). Introduction to Functional Programming using Haskell. Hemel Hempstead, Hertfordshire, UK: Prentice Hall Europe. p. 195. ISBN 0-13-484346-0.
 
+**NOTE** : All functions are provided without currying. We paid attention to the order of parameters to 
+facilitate currying for those who will find it convenient. The `ramda` functional library can be 
+used easily to curry any relevant provided function. 
+
 # Types
 - `Traversal :: BFS | PRE_ORDER | POST_ORDER`
 - `Lenses :: {{getLabel :: T -> E, getChildren :: T -> F, setTree :: ExF -> T}}`
+- `State :: {{isAdded :: Boolean, isVisited :: Boolean, path :: Array<Number>, ...}}` (extensible
+ record)
+- `TraversalState :: Map<T, State>`
 - `Reducer<A, T, TraversalState> :: A -> TraversalState -> T -> A`
 - `TraverseSpecs :: {{strategy :: Optional<Traversal>, seed : A, visit :: Reducer<A, T, TraversalState> }}`
+
+Those types can be slightly modified depending on the specific function executed. The meaning of 
+those types is pretty straight-forward. Let's just notice that `TraversalState` is a map which 
+associates to each node being traversed the state of the traversal, and possibly any extra state 
+that the API consumer might want to add, while traversing. As a matter of fact, the `visit` 
+function could mutate `TraversalState` if that would make sense for the situation at end. That 
+mutation would be invisible from outside of the API, as long as none of the mutated state is 
+exported ("If a tree falls in a forest and no one is around to hear it, does it make a sound?").
 
 # API
 ## breadthFirstTraverseTree :: Lenses -> TraverseSpecs -> Tree -> A
@@ -213,7 +228,135 @@ QUnit.test("main case - postOrderTraverseTree", function exec_test(assert) {
 });
 ```
 
-## reduceTree
-## forEachInTree
+## reduceTree :: Lenses -> TraverseSpecs -> Tree -> A
+**NOTE** : the  `strategy` property is this time mandatory as part of the traversal specs.
+
+### Description
+Traverse a tree according to the parameterized traversal stratgy, applying a reducer while 
+traversing the tree, and returning the final accumulated reduction.
+
+### Types
+- `Tree :: T`
+- `Traversal :: BFS | PRE_ORDER | POST_ORDER`
+- `State :: {{isAdded :: Boolean, isVisited :: Boolean, path :: Array<Number>, ...}}` (extensible
+ record)
+- `TraversalState :: Map<T, State>`
+- `Lenses :: {{getLabel :: T -> E, getChildren :: T -> F, setTree :: ExF -> T}}`
+- `Reducer<A, T, TraversalState> :: A -> TraversalState -> T -> A`
+- `TraverseSpecs :: {{strategy :: Traversal, seed : A, visit :: Reducer<A, T, TraversalState> }}`
+
+### Examples
+```ecmascript 6
+QUnit.test("main case - reduceTree", function exec_test(assert) {
+  const reduceTraverse = assoc("strategy", BFS, traverse);
+  const actual = reduceTree(lenses, reduceTraverse, tree);
+  const expected = [
+    "root",
+    "left",
+    "middle",
+    "right",
+    "midleft",
+    "midright"
+  ];
+
+  assert.deepEqual(actual, expected, `Fails!`);
+});
+```
+
+## forEachInTree :: Lenses -> TraverseSpecs -> Tree -> A
+### Description
+Traverse a tree according to the parameterized traversal strategy, applying a reducer while 
+traversing the tree, and returning the final accumulated reduction. Note that, as the action may 
+perform effects, the order of the traversal is particularly relevant.
+
+**NOTE** : the traversal specs require this time an `action` property defining the action to 
+execute on each traversed portion of the tree. The same stands for the `strategy` property.
+
+### Types
+- `Tree :: T`
+- `Traversal :: BFS | PRE_ORDER | POST_ORDER`
+- `State :: {{isAdded :: Boolean, isVisited :: Boolean, path :: Array<Number>, ...}}` (extensible
+ record)
+- `TraversalState :: Map<T, State>`
+- `Lenses :: {{getLabel :: T -> E, getChildren :: T -> F, setTree :: ExF -> T}}`
+- `Action :: T -> traversalState -> ()`
+- `TraverseSpecs :: {{strategy :: Traversal, action :: Action }}`
+
+### Examples
+```ecmascript 6
+QUnit.test("main case - forEachInTree", function exec_test(assert) {
+  const traces = [];
+  const traverse = {
+    strategy: POST_ORDER,
+    action: (tree, traversalState) => {
+      traces.push(traversalState.get(tree))
+      traces.push(tree.label)
+    }
+  }
+
+  forEachInTree(lenses, traverse, tree);
+  const actual = traces;
+  const expected = [
+    {
+      "isAdded": true,
+      "isVisited": false,
+      "path": [
+        0,
+        0
+      ]
+    },
+    "left",
+    {
+      "isAdded": true,
+      "isVisited": false,
+      "path": [
+        0,
+        1,
+        0
+      ]
+    },
+    "midleft",
+    {
+      "isAdded": true,
+      "isVisited": false,
+      "path": [
+        0,
+        1,
+        1
+      ]
+    },
+    "midright",
+    {
+      "isAdded": true,
+      "isVisited": true,
+      "path": [
+        0,
+        1
+      ]
+    },
+    "middle",
+    {
+      "isAdded": true,
+      "isVisited": false,
+      "path": [
+        0,
+        2
+      ]
+    },
+    "right",
+    {
+      "isAdded": true,
+      "isVisited": true,
+      "path": [
+        0
+      ]
+    },
+    "root"
+  ];
+
+  assert.deepEqual(actual, expected, `Fails!`);
+});
+```
+
 ## mapOverTree
 ## pruneWhen
