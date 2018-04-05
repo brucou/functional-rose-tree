@@ -94,7 +94,7 @@ target language and specific parser. The ADT technique also allows for higher re
 facilitate currying for those who will find it convenient. The `ramda` functional library can be 
 used easily to curry any relevant provided function. 
 
-# Types
+# Key types
 - `Traversal :: BFS | PRE_ORDER | POST_ORDER`
 - `Lenses :: {{getLabel :: T -> E, getChildren :: T -> F, setTree :: ExF -> T}}`
 - `State :: {{isAdded :: Boolean, isVisited :: Boolean, path :: Array<Number>, ...}}` (extensible
