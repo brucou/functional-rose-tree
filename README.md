@@ -32,8 +32,8 @@ just as easily :
 - can deal with large trees : that excludes recursive traversal algorithms in favor of the 
 iterative versions, as on large trees recursive algorithms may lead to a stack overflow
 - basic operations : bfs/dfs/post-order traversal, map/reduce/prune(~filter)/find operations
-- advance operations : find common ancestor, replace, zipper construction
-- optional : tree diff (the general algorithm is easily O(n^3)!)
+- advanced operations : find common ancestor, replace, zipper construction
+- optional : tree diff (the general algorithm is easily O(n^3)!), some, every
 
 At the current state of the library, only the basic operations are implemented.
 
@@ -367,7 +367,10 @@ QUnit.test("main case - forEachInTree", function exec_test(assert) {
 
 ## mapOverTree :: Lenses -> MapFn -> Tree -> Tree'
 ### Description 
-Traverse a tree, applying a mapping function, while, and returning a tree with the same structure, containing the mapped nodes. Order of traversal is irrelevant here, as all nodes of the tree are to be traversed, and the mapping function is assumed to be a pure function.
+Traverse a tree, applying a mapping function, while, and returning a tree with the same 
+structure, containing the mapped nodes. Order of traversal is irrelevant here, as all nodes of 
+the tree are to be traversed, and the mapping function is assumed to be a pure function. Note 
+that the `setTree` lens is mandatory here to rebuild the tree from its nodes.
 
 ### Types
 - `Tree :: T`
@@ -420,9 +423,53 @@ QUnit.test("main case - mapOverTree", function exec_test(assert) {
 
 ```
 
-## pruneWhen
-**TODO**  
+## pruneWhen :: Lenses -> Predicate -> Tree -> Tree
+### Description 
+Traverse a tree, applying a predicate, which when failed leads to discarding any descendant 
+nodes of the node failing that predicate. The failing node itself remains in the result tree. 
+ Note that the `setTree` lens is mandatory here to rebuild the tree from its nodes. Note also 
+ that the predicate is passed the traversal state, together with the node. This allows to 
+ implement stop conditions by modifying directly the traversal state (adding for instance a 
+ `isTraversalStopped` flag).
 
+### Types
+- `Tree :: T`
+- `State :: {{isAdded :: Boolean, isVisited :: Boolean, path :: Array<Number>, ...}}` (extensible record)
+- `TraversalState :: Map<T, State>`
+- `Lenses :: {{getLabel :: T -> E, getChildren :: T -> F, setTree :: ExF -> T}}`
+- `Predicate :: T -> TraversalState -> Boolean`
+
+### Examples
+```javascript
+QUnit.test("main case - pruneWhen", function exec_test(assert) {
+  const getChildren = tree => tree.children || [];
+  const getLabel = tree => tree.label || '';
+  const constructTree = (label, trees) => ({label, children : trees});
+  const predicate = (tree, traversalState) => traversalState.get(tree).path.length > 1;
+  const lenses = { getChildren, constructTree, getLabel };
+
+  const actual = pruneWhen(lenses, predicate, tree);
+  const expected = {
+    "children": [
+      {
+        "children": [],
+        "label": "left"
+      },
+      {
+        "children": [],
+        "label": "middle"
+      },
+      {
+        "children": [],
+        "label": "right"
+      }
+    ],
+    "label": "root"
+  };
+
+  assert.deepEqual(actual, expected, `Fails!`);
+});
+```
 ## visitTree :: ExtendedTraversalSpecs -> Tree -> A
 ### Description 
 This is the generic tree traversal algorithm that all traversals use as their core. 
