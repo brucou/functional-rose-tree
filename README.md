@@ -359,4 +359,13 @@ QUnit.test("main case - forEachInTree", function exec_test(assert) {
 ```
 
 ## mapOverTree
+**TODO**  
+
 ## pruneWhen
+**TODO**  
+
+## visitTree :: ExtendedTraversalSpecs -> Tree -> A
+### Description 
+This is the generic tree traversal algorithm that all traversals use as their core.
+
+**TODO**  
