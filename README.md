@@ -16,7 +16,7 @@ imposed tree format, only basic operations
 API,, basic but key functional operations (bfs/dfs/post-order traversals, map, filter, find), an 
 interesting addition (`stroll`) traversing two trees at the same time, imposed tree format
 - [DataStructures.Tree](https://github.com/stephen-james/DataStructures.Tree) ; ancient, 
-undocumented, umaintained
+undocumented, unmaintained
 
 I developed this library due to my specifications which were unfulfilled by the aforementioned 
 libraries :
@@ -29,8 +29,11 @@ the API consumer. Those two possible data structures for a tree should be handle
 just as easily : 
   - `[root, [left, [middle, [midright, midleft]], right]]`, or more commonly 
   - `{label : 'root', children : [{label:'left'}, {label: 'right'}]}`.
+- can deal with large trees : that excludes recursive traversal algorithms in favor of the 
+iterative versions, as on large trees recursive algorithms may lead to a stack overflow
 - basic operations : bfs/dfs/post-order traversal, map/reduce/prune(~filter)/find operations
-- advance operations : find common ancestor, replace, build a zipper
+- advance operations : find common ancestor, replace, zipper construction
+- optional : tree diff (the general algorithm is easily O(n^3)!)
 
 At the current state of the library, only the basic operations are implemented.
 
@@ -82,6 +85,10 @@ For instance, the tree-like object `{label : 'root', children : [{label:'left'},
 - `setTree = (label, children) => ({label, children})`
 
 [^1]: Bird, Richard (1998). Introduction to Functional Programming using Haskell. Hemel Hempstead, Hertfordshire, UK: Prentice Hall Europe. p. 195. ISBN 0-13-484346-0.
+
+The flexibility offered by the abstract data type comes in handy when interpreting abstract 
+syntax trees, whose format is imposed by the parser, and which may vary widely according to the 
+target language and specific parser. The ADT technique also allows for higher reusability.
 
 **NOTE** : All functions are provided without currying. We paid attention to the order of parameters to 
 facilitate currying for those who will find it convenient. The `ramda` functional library can be 
@@ -198,7 +205,7 @@ QUnit.test("main case - preorderTraverseTree", function exec_test(assert) {
 
 ## postOrderTraverseTree :: Lenses -> TraverseSpecs -> Tree -> A
 ### Description
-Traverse a tree pre=order depth-first, applying a reducer while traversing the tree, and returning 
+Traverse a tree post=order depth-first, applying a reducer while traversing the tree, and returning 
 the final accumulated reduction.
 
 ### Types
@@ -366,6 +373,102 @@ QUnit.test("main case - forEachInTree", function exec_test(assert) {
 
 ## visitTree :: ExtendedTraversalSpecs -> Tree -> A
 ### Description 
-This is the generic tree traversal algorithm that all traversals use as their core.
+This is the generic tree traversal algorithm that all traversals use as their core. 
 
-**TODO**  
+- The tree is traversed starting from the root, 
+- for each traversed node its children are generating traversal tasks, 
+- a store in used to keep track of the pending traversal tasks to execute, 
+- each task involves the application of a visiting function which builds iteratively the result of
+ the traversal, taking inputs from the traversal state, and the traversed node 
+- the traversal state includes flags (`isAdded`, `isVisited`) and relevant information (`path`) 
+to the traversal
+- the traversal state is passed to the `getChildren` lens, and the visitor function, for those 
+cases where the traversal tasks to generate or visit to undertake depend on the traversal state 
+  - that is for instance the case for iterative post-order traversal, where we traverse a parent 
+  node twice, but only visit it once, after its children have been visited)
+  - that is also the case for incomplete traversals (`pruneWhen`), where we discard traversing 
+  and visiting some nodes, based on some predicate 
+
+### Types
+- `Tree :: T`
+- `Traversal :: BFS | PRE_ORDER | POST_ORDER`
+- `EmptyStore :: *`
+- `Store :: {{empty :: EmptyStore, add :: [T] -> Store -> (), takeAndRemoveOne :: Store -> T, 
+isEmpty :: Store -> Boolean}}`
+- `State :: {{isAdded :: Boolean, isVisited :: Boolean, path :: Array<Number>, ...}}` (extensible
+ record)
+- `TraversalState :: Map<T, State>`
+- `Lenses :: {{getLabel :: T -> E, getChildren :: T -> F, setTree :: ExF -> T}}`
+- `Reducer<A, T, TraversalState> :: A -> TraversalState -> T -> A`
+- `TraverseSpecs :: {{seed : A, visit :: Reducer<A, T, TraversalState> }}`
+- `ExtendedTraversalSpecs :: {{store :: Store, lenses :: Lenses, traverse :: TraverseSpecs}}`
+
+### Examples
+Breadth-first traversal requires a stack store...
+ 
+```ecmascript 6
+export function breadthFirstTraverseTree(lenses, traverse, tree) {
+  const { getChildren } = lenses;
+  const traversalSpecs = {
+    store: {
+      empty: [],
+      takeAndRemoveOne: store => store.shift(),
+      isEmpty: store => store.length === 0,
+      add: (subTrees, store) => store.push.apply(store, subTrees)
+    },
+    lenses: { getChildren: (traversalState, subTree) => getChildren(subTree) },
+    traverse
+  };
+
+  return visitTree(traversalSpecs, tree);
+}
+```
+
+while a depth-first traversal requires a queue store. Additionally, a custom lens adds children 
+ nodes for visit only under some conditions corresponding to post-order traversal (i.e. parent 
+  must be visited only after children).
+  
+```ecmascript 6
+export function postOrderTraverseTree(lenses, traverse, tree) {
+  const { getChildren } = lenses;
+  const isLeaf = (tree, traversalState) => getChildren(tree, traversalState).length === 0;
+  const { seed, visit } = traverse;
+  const predicate = (tree, traversalState) => traversalState.get(tree).isVisited || isLeaf(tree, traversalState)
+  const decoratedLenses = {
+    // For post-order, add the parent at the end of the children, that simulates the stack for the recursive function
+    // call in the recursive post-order traversal algorithm
+    // DOC : getChildren(tree, traversalState) also admit traversalState as argumnets but in second place
+    getChildren: (traversalState, tree) =>
+      predicate(tree, traversalState)
+        ? []
+        : getChildren(tree, traversalState).concat(tree)
+  };
+  const traversalSpecs = {
+    store: {
+      empty: [],
+      takeAndRemoveOne: store => store.shift(),
+      isEmpty: store => store.length === 0,
+      add: (subTrees, store) => store.unshift(...subTrees)
+    },
+    lenses: decoratedLenses,
+    traverse: {
+      seed: seed,
+      visit: (result, traversalState, tree) => {
+        // Cases :
+        // 1. label has been visited already : visit
+        // 2. label has not been visited, and there are no children : visit
+        // 3. label has not been visited, and there are children : don't visit, will do it later
+        if (predicate(tree, traversalState)) {
+          visit(result, traversalState, tree);
+        }
+
+        return result;
+      }
+    }
+  };
+
+  return visitTree(traversalSpecs, tree);
+}
+```
+**TODO**  explain post-order, how I change the children. Explain map how I reconstruct the tree, 
+explain when the getChildren take the traversalState in SECOND parameter...

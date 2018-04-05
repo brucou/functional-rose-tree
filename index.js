@@ -48,7 +48,7 @@ function updateVisitInTraversalState(traversalState, tree) {
 export function visitTree(traversalSpecs, tree) {
   const { store, lenses, traverse } = traversalSpecs;
   const { empty, add, takeAndRemoveOne, isEmpty } = store;
-  const { getChildren, getLabel, setChildren, setLabel } = lenses;
+  const { getChildren, getLabel, setTree } = lenses;
   const { visit, seed } = traverse;
   const traversalState = new Map();
 
@@ -68,6 +68,7 @@ export function visitTree(traversalSpecs, tree) {
     updateVisitInTraversalState(traversalState, subTree);
   }
 
+  // Free the references to the tree/subtrees
   traversalState.clear();
 
   return visitAcc;
@@ -131,7 +132,6 @@ export function postOrderTraverseTree(lenses, traverse, tree) {
     traverse: {
       seed: seed,
       visit: (result, traversalState, tree) => {
-        const localTraversalState = traversalState.get(tree);
         // Cases :
         // 1. label has been visited already : visit
         // 2. label has not been visited, and there are no children : visit
@@ -257,28 +257,3 @@ export function pruneWhen(lenses, predicate, tree) {
   return prunedTree
 }
 
-/** TODO
- * Future versions
- * find(lenses, predicate, nTimesOrAll, tree) : [Tree], returns an array of N trees which satisfy the predicate
- * findCommonAncestor(lenses, treeA, treeB, rootTree) : tree (whose root is common ancestor node )
- * replaceWhen (lenses, predicate, treeReplacing, treeReplaced) : tree
- * makeZipper (lenses, tree) :
- * checkTreeContracts (tree) : Boolean ; checks the tree contracts :
- * - All trees encountered when travrsing are different entities (referential equality prohibited).
- * - empty tree prohibited i.e. getLabel(tree) cannot throw, getChildren(tree) cannot throw; tree can never be null
- * in traversal
- * - getChildren(setTree(label, children)) = children
- * - getLabel(setTree(label, children)) = label
- */
-// DOC:  because this uses Map, every node MUST be a different object. It is easy to be the case for nodes, but less
-// obvious for leaves. Leaves MUST all be different object!!!
-
-// TODO : traverseTree, adding concat monoidal function, and monoidal empty
-// then store: { empty, add, take, isEmpty}
-// then take :: store -> Maybe Tree (maybe, because the store could be empty...)
-//      add :: [Tree] -> store -> store, automatically derived from below
-//      add :: Tree -> store -> store // NO: use the array form
-//      add :: [] -> store -> store (the store is left unchanged)
-// T must have getChildrenFn :: Tree -> [] | [Tree], i.e. it is a prism!!
-// Tree T :: Leaf T | [Tree T]
-// visitFn should be a reducer :: acc -> Tree -> acc'
