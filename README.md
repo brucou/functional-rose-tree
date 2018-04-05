@@ -365,8 +365,60 @@ QUnit.test("main case - forEachInTree", function exec_test(assert) {
 });
 ```
 
-## mapOverTree
-**TODO**  
+## mapOverTree :: Lenses -> MapFn -> Tree -> Tree'
+### Description 
+Traverse a tree, applying a mapping function, while, and returning a tree with the same structure, containing the mapped nodes. Order of traversal is irrelevant here, as all nodes of the tree are to be traversed, and the mapping function is assumed to be a pure function.
+
+### Types
+- `Tree :: T`
+- `Tree' :: T'`
+- `Traversal :: BFS | PRE_ORDER | POST_ORDER`
+- `State :: {{isAdded :: Boolean, isVisited :: Boolean, path :: Array<Number>, ...}}` (extensible record)
+- `TraversalState :: Map<T, State>`
+- `Lenses :: {{getLabel :: T -> E, getChildren :: T -> F, setTree :: ExF -> T}}`
+- `MapFn :: E -> E'`
+
+### Examples
+```ecmascript 6
+QUnit.test("main case - mapOverTree", function exec_test(assert) {
+  const getChildren = tree => tree.children || [];
+  const getLabel = tree => tree.label || '';
+  const constructTree = (label, trees) => ({label, children : trees});
+  const mapFn = label => addPrefix('Map:')(label)
+  const lenses = { getChildren, constructTree, getLabel };
+
+  const actual = mapOverTree(lenses, mapFn, tree);
+  const expected = {
+    "children": [
+      {
+        "children": [],
+        "label": "Map:left"
+      },
+      {
+        "children": [
+          {
+            "children": [],
+            "label": "Map:midleft"
+          },
+          {
+            "children": [],
+            "label": "Map:midright"
+          }
+        ],
+        "label": "Map:middle"
+      },
+      {
+        "children": [],
+        "label": "Map:right"
+      }
+    ],
+    "label": "Map:root"
+  };
+
+  assert.deepEqual(actual, expected, `Fails!`);
+});
+
+```
 
 ## pruneWhen
 **TODO**  
@@ -437,7 +489,6 @@ export function postOrderTraverseTree(lenses, traverse, tree) {
   const decoratedLenses = {
     // For post-order, add the parent at the end of the children, that simulates the stack for the recursive function
     // call in the recursive post-order traversal algorithm
-    // DOC : getChildren(tree, traversalState) also admit traversalState as argumnets but in second place
     getChildren: (traversalState, tree) =>
       predicate(tree, traversalState)
         ? []
