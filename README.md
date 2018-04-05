@@ -568,5 +568,4 @@ export function postOrderTraverseTree(lenses, traverse, tree) {
   return visitTree(traversalSpecs, tree);
 }
 ```
-**TODO**  explain post-order, how I change the children. Explain map how I reconstruct the tree, 
-explain when the getChildren take the traversalState in SECOND parameter...
+
