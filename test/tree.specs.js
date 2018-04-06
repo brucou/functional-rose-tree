@@ -5,7 +5,10 @@ import {
   BFS, breadthFirstTraverseTree, forEachInTree, mapOverTree, POST_ORDER, postOrderTraverseTree, preorderTraverseTree,
   pruneWhen, reduceTree
 } from "../";
-import { assoc } from 'ramda'
+
+function merge (objA, objB){
+  return Object.assign({}, objA, objB);
+}
 
 function addPrefix(prefix) {
   return function (str) {
@@ -80,7 +83,7 @@ QUnit.test("main case - postOrderTraverseTree", function exec_test(assert) {
 });
 
 QUnit.test("main case - reduceTree", function exec_test(assert) {
-  const reduceTraverse = assoc("strategy", BFS, traverse);
+  const reduceTraverse = merge(traverse, {"strategy" : BFS});
   const actual = reduceTree(lenses, reduceTraverse, tree);
   const expected = [
     "root",
@@ -233,5 +236,3 @@ QUnit.test("main case - pruneWhen", function exec_test(assert) {
 
   assert.deepEqual(actual, expected, `Fails!`);
 });
-
-// TODO : Write a test which show how to interrupt going down a tree when doing tree traversal

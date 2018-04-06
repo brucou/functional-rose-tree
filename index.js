@@ -3,6 +3,7 @@ export const POST_ORDER = "POST_ORDER";
 export const PRE_ORDER = "PRE_ORDER";
 export const BFS = "BFS";
 
+///// Utility functions
 // Cheap cloning, which is enough for our needs : we only clone seeds and empty values, which are generally simple
 // objects
 function clone(a){
@@ -14,7 +15,7 @@ function merge (objA, objB){
 }
 
 function times (fn, n){
-  Array.apply(null, {length: n}).map(Number.call, Number).map(index => fn(index))
+  Array.apply(null, {length: n}).map(Number.call, Number).map(fn)
 }
 
 /**
@@ -57,6 +58,7 @@ function updateVisitInTraversalState(traversalState, tree) {
   );
 }
 
+///// Core API
 export function visitTree(traversalSpecs, tree) {
   const { store, lenses, traverse } = traversalSpecs;
   const { empty, add, takeAndRemoveOne, isEmpty } = store;
