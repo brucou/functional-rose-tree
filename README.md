@@ -1,3 +1,16 @@
+- [Motivation](#motivation)
+- [Concepts](#concepts)
+- [Key types](#key-types)
+- [API](#api)
+  * [breadthFirstTraverseTree :: Lenses -> TraverseSpecs -> Tree -> A](#breadthfirsttraversetree----lenses----traversespecs----tree----a)
+  * [preorderTraverseTree :: Lenses -> TraverseSpecs -> Tree -> A](#preordertraversetree----lenses----traversespecs----tree----a)
+  * [postOrderTraverseTree :: Lenses -> TraverseSpecs -> Tree -> A](#postordertraversetree----lenses----traversespecs----tree----a)
+  * [reduceTree :: Lenses -> TraverseSpecs -> Tree -> A](#reducetree----lenses----traversespecs----tree----a)
+  * [forEachInTree :: Lenses -> TraverseSpecs -> Tree -> A](#foreachintree----lenses----traversespecs----tree----a)
+  * [mapOverTree :: Lenses -> MapFn -> Tree -> Tree'](#mapovertree----lenses----mapfn----tree----tree-)
+  * [pruneWhen :: Lenses -> Predicate -> Tree -> Tree](#prunewhen----lenses----predicate----tree----tree)
+  * [visitTree :: ExtendedTraversalSpecs -> Tree -> A](#visittree----extendedtraversalspecs----tree----a)
+
 # Motivation
 There is no shortage of libraries for manipulating rose trees in javascript. Because we seek to 
 focus on general multi-way trees, we have excluded those libraries focusing on specialized trees 
