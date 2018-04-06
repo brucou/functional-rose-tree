@@ -12,7 +12,7 @@ object-based API, basic operations (traversal, find) together with utility funct
 etc.) supporting the imperative portion of the API, nice [demo site](http://jnuno.com/tree-model-js/)!
 - [arboreal](https://github.com/afiore/arboreal) : ancient, no longer maintained, imperative API, 
 imposed tree format, only basic operations
-= [t-js](https://github.com/aaronj1335/t-js) : ancient, no longer maintained, semi-functional 
+- [t-js](https://github.com/aaronj1335/t-js) : ancient, no longer maintained, semi-functional 
 API,, basic but key functional operations (bfs/dfs/post-order traversals, map, filter, find), an 
 interesting addition (`stroll`) traversing two trees at the same time, imposed tree format
 - [DataStructures.Tree](https://github.com/stephen-james/DataStructures.Tree) ; ancient, 
@@ -33,7 +33,7 @@ just as easily :
 iterative versions, as on large trees recursive algorithms may lead to a stack overflow
 - basic operations : bfs/dfs/post-order traversal, map/reduce/prune(~filter)/find operations
 - advanced operations : find common ancestor, replace, zipper construction
-- optional : tree diff (the general algorithm is easily O(n^3)!), some, every
+- optional : tree diff(hard), some, every (not so useful)
 
 At the current state of the library, only the basic operations are implemented.
 
@@ -127,6 +127,9 @@ final accumulated reduction.
 - `Reducer<A, T, TraversalState> :: A -> TraversalState -> T -> A`
 - `TraverseSpecs :: {{strategy :: Optional<Traversal>, seed : A, visit :: Reducer<A, T, TraversalState> }}`
 
+### Other contracts
+- a seed **must** be a JSON object
+
 ### Examples
 **NOTE** : for bfs/pre/post-order traversals, we only need the `getChildren` lens. It is a good 
 habit however to define and pass the full`lenses` once and for all.
@@ -218,6 +221,9 @@ the final accumulated reduction.
 - `Reducer<A, T, TraversalState> :: A -> TraversalState -> T -> A`
 - `TraverseSpecs :: {{strategy :: Optional<Traversal>, seed : A, visit :: Reducer<A, T, TraversalState> }}`
 
+### Other contracts
+- a seed **must** be a JSON object
+
 ### Examples
 ```ecmascript 6
 QUnit.test("main case - postOrderTraverseTree", function exec_test(assert) {
@@ -251,6 +257,9 @@ traversing the tree, and returning the final accumulated reduction.
 - `Lenses :: {{getLabel :: T -> E, getChildren :: T -> F, setTree :: ExF -> T}}`
 - `Reducer<A, T, TraversalState> :: A -> TraversalState -> T -> A`
 - `TraverseSpecs :: {{strategy :: Traversal, seed : A, visit :: Reducer<A, T, TraversalState> }}`
+
+### Other contracts
+- a seed **must** be a JSON object
 
 ### Examples
 ```ecmascript 6
@@ -501,6 +510,10 @@ isEmpty :: Store -> Boolean}}`
 - `Reducer<A, T, TraversalState> :: A -> TraversalState -> T -> A`
 - `TraverseSpecs :: {{seed : A, visit :: Reducer<A, T, TraversalState> }}`
 - `ExtendedTraversalSpecs :: {{store :: Store, lenses :: Lenses, traverse :: TraverseSpecs}}`
+
+### Other contracts
+- an empty store **must** be a JSON object
+- a seed **must** be a JSON object
 
 ### Examples
 Breadth-first traversal requires a stack store...

@@ -4,9 +4,15 @@
   "repository": "https://github.com/brucou/functional-rose-tree.git",
   "version": "0.0.1",
   "license": "Apache-2.0",
+  "scripts": {
+
+  },
   "devDependencies": {
     "qunitjs": "^1.20.0",
     "babel-core": "6.24.1",
+    "babelify": "^7.3.0",
+    "browserify": "^11.2.0",
+    "watchify": "^3.10.0",
     "rollup": "^0.54.0",
     "rollup-plugin-babel": "^3.0.3",
     "rollup-plugin-commonjs": "^8.2.6",

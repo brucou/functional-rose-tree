@@ -1,9 +1,21 @@
-import { clone, merge, times } from "ramda";
-
 const PATH_ROOT = [0];
 export const POST_ORDER = "POST_ORDER";
 export const PRE_ORDER = "PRE_ORDER";
 export const BFS = "BFS";
+
+// Cheap cloning, which is enough for our needs : we only clone seeds and empty values, which are generally simple
+// objects
+function clone(a){
+  return JSON.parse(JSON.stringify(a))
+}
+
+function merge (objA, objB){
+  return Object.assign({}, objA, objB);
+}
+
+function times (fn, n){
+  Array.apply(null, {length: n}).map(Number.call, Number).map(index => fn(index))
+}
 
 /**
  *
@@ -227,6 +239,7 @@ export function mapOverTree(lenses, mapFn, tree) {
 
   return mappedTree;
 }
+
 
 /**
  * Returns a tree where all children of nodes which fails a predicate are pruned. Note that the node failing the
