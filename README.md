@@ -31,22 +31,31 @@ interesting addition (`stroll`) traversing two trees at the same time, imposed t
 - [DataStructures.Tree](https://github.com/stephen-james/DataStructures.Tree) ; ancient, 
 undocumented, unmaintained
 
-I developed this library due to my specifications which were unfulfilled by the aforementioned 
-libraries :
+In practice, it seems that few people use a dedicated tree library for manipulating tree-like 
+data structure. Rather what I saw in the wild is ad-hoc implementation of traversal, which are 
+adjusted to the particular shape of the data at hand. This is understandable as tree traversal 
+algorithms, specially the recursive ones, are trivial to implement (5-10 lines of code). 
 
-- functional API : while nodes can be reused, trees cannot be modified in place, or mutate 
-any subtrees.
-- flexible tree data structure : API should allow to manipulate trees as an abstract 
-data type (ADT), whose concrete data structure implementing that ADT is left to be specified by 
-the API consumer. Those two possible data structures for a tree should be handled by the library 
-just as easily : 
+However :
+
+- iterative algorithms are almost mandatory to process large trees (to avoid exhausting the stack)
+- a generic traversal library fosters reuse (in my particular case, I have various 
+tree format to handle, and it would not be DRY to write the traversal at hand each time for each 
+format)
+- a functional library is also nice to guarantee that there is no destructive update of tree 
+nodes, and at the same time allows natural composition and chaining of tree operations
+- a well-designed, tested library enhances readability and maintainability 
+
+As a conclusion, these are the design choices made for this library :
+- manipulation of tree data structure is based on ADT, i.e. not on a specific or concrete data 
+structure as the aforementioned libraries. Those two possible concrete data structures for a tree 
+should be handled by the library just as easily : 
   - `[root, [left, [middle, [midright, midleft]], right]]`, or more commonly 
   - `{label : 'root', children : [{label:'left'}, {label: 'right'}]}`.
-- can deal with large trees : that excludes recursive traversal algorithms in favor of the 
-iterative versions, as on large trees recursive algorithms may lead to a stack overflow
-- basic operations : bfs/dfs/post-order traversal, map/reduce/prune(~filter)/find operations
-- advanced operations : find common ancestor, replace, zipper construction
-- optional : tree diff(hard), some, every (not so useful)
+- inmutability of tree nodes
+- iterative traversal algorithms
+- basic operations available : bfs/dfs/post-order traversal, map/reduce/prune(~filter)/find operations
+- advanced operations in a future version : find common ancestor, replace, zipper construction, optional : tree diff(hard), some, every (not so useful)
 
 At the current state of the library, only the basic operations are implemented.
 
@@ -141,7 +150,8 @@ final accumulated reduction.
 - `TraverseSpecs :: {{strategy :: Optional<Traversal>, seed : A, visit :: Reducer<A, T, TraversalState> }}`
 
 ### Other contracts
-- a seed **must** be a JSON object
+- a seed **must** be a JSON object or a function returning a constructor (e.g `() => Map`) which 
+executed will produce a seed value
 
 ### Examples
 **NOTE** : for bfs/pre/post-order traversals, we only need the `getChildren` lens. It is a good 
@@ -235,7 +245,8 @@ the final accumulated reduction.
 - `TraverseSpecs :: {{strategy :: Optional<Traversal>, seed : A, visit :: Reducer<A, T, TraversalState> }}`
 
 ### Other contracts
-- a seed **must** be a JSON object
+- a seed **must** be a JSON object or a function returning a constructor (e.g `() => Map`) which 
+executed will produce a seed value
 
 ### Examples
 ```ecmascript 6
@@ -272,7 +283,8 @@ traversing the tree, and returning the final accumulated reduction.
 - `TraverseSpecs :: {{strategy :: Traversal, seed : A, visit :: Reducer<A, T, TraversalState> }}`
 
 ### Other contracts
-- a seed **must** be a JSON object
+- a seed **must** be a JSON object or a function returning a constructor (e.g `() => Map`) which 
+executed will produce a seed value
 
 ### Examples
 ```ecmascript 6
@@ -525,8 +537,10 @@ isEmpty :: Store -> Boolean}}`
 - `ExtendedTraversalSpecs :: {{store :: Store, lenses :: Lenses, traverse :: TraverseSpecs}}`
 
 ### Other contracts
-- an empty store **must** be a JSON object
-- a seed **must** be a JSON object
+- an empty store **must** be a JSON object or a function returning a constructor (e.g `() => 
+Array`) which executed will produce the `empty` value
+- a seed **must** be a JSON object or a function returning a constructor (e.g `() => Map`) which 
+executed will produce a seed value
 
 ### Examples
 Breadth-first traversal requires a stack store...
@@ -595,3 +609,9 @@ export function postOrderTraverseTree(lenses, traverse, tree) {
 }
 ```
 
+# Tests
+- npm run test
+
+# Build
+- npm run build
+- npm run dist 

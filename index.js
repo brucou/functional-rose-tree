@@ -7,7 +7,7 @@ export const BFS = "BFS";
 // Cheap cloning, which is enough for our needs : we only clone seeds and empty values, which are generally simple
 // objects
 function clone(a){
-  return JSON.parse(JSON.stringify(a))
+  return a === undefined ? undefined : JSON.parse(JSON.stringify(a))
 }
 
 function merge (objA, objB){
@@ -15,7 +15,7 @@ function merge (objA, objB){
 }
 
 function times (fn, n){
-  Array.apply(null, {length: n}).map(Number.call, Number).map(fn)
+  return Array.apply(null, {length: n}).map(Number.call, Number).map(fn)
 }
 
 /**
@@ -61,14 +61,18 @@ function updateVisitInTraversalState(traversalState, tree) {
 ///// Core API
 export function visitTree(traversalSpecs, tree) {
   const { store, lenses, traverse } = traversalSpecs;
-  const { empty, add, takeAndRemoveOne, isEmpty } = store;
+  const { empty : emptyOrEmptyConstructor, add, takeAndRemoveOne, isEmpty } = store;
   const { getChildren, getLabel, setTree } = lenses;
-  const { visit, seed } = traverse;
+  const { visit, seed  : seedOrSeedConstructor} = traverse;
   const traversalState = new Map();
+  // NOTE : This allows to have seeds which are non-JSON objects, such as new Map(). We force a new here to make
+  // sure we have an object that cannot be modified out of the scope of visitTree and collaborators
+  const seed = (typeof seedOrSeedConstructor === 'function') ? new (seedOrSeedConstructor()) : clone(seedOrSeedConstructor) ;
+  const empty = (typeof emptyOrEmptyConstructor === 'function') ? new (emptyOrEmptyConstructor()) : clone(emptyOrEmptyConstructor) ;
 
   // necessary to avoid destructive updates on input parameters
-  let currentStore = clone(empty);
-  let visitAcc = clone(seed);
+  let currentStore = empty;
+  let visitAcc = seed;
   add([tree], currentStore);
   traversalState.set(tree, { isAdded: true, isVisited: false, path: PATH_ROOT });
 
@@ -222,7 +226,7 @@ export function mapOverTree(lenses, mapFn, tree) {
   const getChildrenNumber = (tree, traversalState) => getChildren(tree, traversalState).length;
   const stringify = path => path.join(".");
   const treeTraveerse = {
-    seed: new Map(),
+    seed: () => Map,
     visit: (pathMap, traversalState, tree) => {
       const { path } = traversalState.get(tree);
       // Paths are *stringified* because Map with non-primitive objects uses referential equality
@@ -230,6 +234,7 @@ export function mapOverTree(lenses, mapFn, tree) {
       const mappedChildren = times(
         index => pathMap.get(stringify(path.concat(index))), getChildrenNumber(tree, traversalState));
       const mappedTree = constructTree(mappedLabel, mappedChildren);
+      debugger
       pathMap.set(stringify(path), mappedTree);
 
       return pathMap;
