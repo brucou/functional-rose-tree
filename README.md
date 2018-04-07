@@ -1,6 +1,6 @@
 - [Motivation](#motivation)
 - [Concepts](#concepts)
-- [Key types](#key-types)
+- [Contracts](#contracts)
 - [API](#api)
   * [breadthFirstTraverseTree :: Lenses -> TraverseSpecs -> Tree -> A](#breadthfirsttraversetree----lenses----traversespecs----tree----a)
   * [preorderTraverseTree :: Lenses -> TraverseSpecs -> Tree -> A](#preordertraversetree----lenses----traversespecs----tree----a)
@@ -40,7 +40,7 @@ However :
 
 - iterative algorithms are almost mandatory to process large trees (to avoid exhausting the stack)
 - a generic traversal library fosters reuse (in my particular case, I have various 
-tree format to handle, and it would not be DRY to write the traversal at hand each time for each 
+tree formats to handle, and it would not be DRY to write the traversal at hand each time for each 
 format)
 - a functional library is also nice to guarantee that there is no destructive update of tree 
 nodes, and at the same time allows natural composition and chaining of tree operations
@@ -54,7 +54,8 @@ should be handled by the library just as easily :
   - `{label : 'root', children : [{label:'left'}, {label: 'right'}]}`.
 - inmutability of tree nodes
 - iterative traversal algorithms
-- basic operations available : bfs/dfs/post-order traversal, map/reduce/prune(~filter)/find operations
+- basic operations available : bfs/dfs/post-order traversals, map/reduce/prune(~filter)/find 
+operations
 - advanced operations in a future version : find common ancestor, replace, zipper construction, optional : tree diff(hard), some, every (not so useful)
 
 At the current state of the library, only the basic operations are implemented.
@@ -67,13 +68,12 @@ the functional programming community, so we use it here. For instance, a rose tr
 
 There is a distinction between a tree as an abstract data type and as a concrete data structure, 
 analogous to the distinction between a list and a linked list. As a data type, a tree has a value
- (`:: a`) and children (`:: [RoseTree a]`), and the children are themselves trees; the value and 
- children  of the  tree  are  interpreted as the value of the root node and the subtrees of the  
- children of the root node. A linked tree is an example of specific data structure, implementing 
+ (`:: a`) and children (`:: [RoseTree a]`), and the children are themselves trees. 
+ A linked tree is an example of specific data structure, implementing 
  the abstract data type and is a group of nodes, where  each node has a value and a list of 
  references to other nodes (its children).  There is also the requirement that no two "downward" 
   references point to the same node.
-  
+
 As an ADT, the abstract tree type T with values of some type E is defined, using the abstract forest type F (list of trees), by the functions:
 
 - value: T → E
@@ -116,7 +116,8 @@ target language and specific parser. The ADT technique also allows for higher re
 facilitate currying for those who will find it convenient. The `ramda` functional library can be 
 used easily to curry any relevant provided function. 
 
-# Key types
+# Contracts
+## Key types
 - `Traversal :: BFS | PRE_ORDER | POST_ORDER`
 - `Lenses :: {{getLabel :: T -> E, getChildren :: T -> F, setTree :: ExF -> T}}`
 - `State :: {{isAdded :: Boolean, isVisited :: Boolean, path :: Array<Number>, ...}}` (extensible
@@ -132,6 +133,19 @@ that the API consumer might want to add, while traversing. As a matter of fact, 
 function could mutate `TraversalState` if that would make sense for the situation at end. That 
 mutation would be invisible from outside of the API, as long as none of the mutated state is 
 exported ("If a tree falls in a forest and no one is around to hear it, does it make a sound?").
+
+## No node repetition
+It is important to note that **no tree can repeat the same nodes** with sameness defined by 
+referential equality. It is easy to inadvertently repeat the same node :
+
+```javascript
+const tree1  ...;
+const tree2 = {label : ..., children : [tree1, tree1]}
+```
+
+While `tree2` is a well-formed tree, our library will bug in that case, for reasons due to our 
+specific implementation (nodes are used as keys to keep the traversal state, and keys must be 
+unique).
 
 # API
 ## breadthFirstTraverseTree :: Lenses -> TraverseSpecs -> Tree -> A
