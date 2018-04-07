@@ -1,6 +1,6 @@
 - [Motivation](#motivation)
 - [Concepts](#concepts)
-- [Contracts](#contracts)
+- [Key contracts](#key-contracts)
 - [API](#api)
   * [breadthFirstTraverseTree :: Lenses -> TraverseSpecs -> Tree -> A](#breadthfirsttraversetree----lenses----traversespecs----tree----a)
   * [preorderTraverseTree :: Lenses -> TraverseSpecs -> Tree -> A](#preordertraversetree----lenses----traversespecs----tree----a)
