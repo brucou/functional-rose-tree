@@ -12,7 +12,7 @@
   * [visitTree :: ExtendedTraversalSpecs -> Tree -> A](#visittree----extendedtraversalspecs----tree----a)
 
 # Motivation
-There is no shortage of libraries for manipulating rose trees in javascript. Because we seek to 
+There is no shortage of libraries for manipulating trees in javascript. Because we seek to 
 focus on general multi-way trees, we have excluded those libraries focusing on specialized trees 
 (i.e. binary search trees, red-black trees, etc.). Also we did not consider the libraries who 
 look at trees from a visualization perspective (for instance [jstree](https://www.jstree.com/)), as 
