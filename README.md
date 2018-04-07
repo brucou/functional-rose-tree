@@ -14,7 +14,7 @@
 # Motivation
 There is no shortage of libraries for manipulating trees in javascript. Because we seek to 
 focus on general multi-way trees, we have excluded those libraries focusing on specialized trees 
-(i.e. binary search trees, red-black trees, etc.). Also we did not consider the libraries who 
+(i.e. binary search trees, red-black trees, etc.). Also we did not consider the libraries which 
 look at trees from a visualization perspective (for instance [jstree](https://www.jstree.com/)), as 
 we focus here on handling the data structure, and providing a few basic operations on it.
 
@@ -32,7 +32,7 @@ interesting addition (`stroll`) traversing two trees at the same time, imposed t
 undocumented, unmaintained
 
 In practice, it seems that few people use a dedicated tree library for manipulating tree-like 
-data structure. Rather what I saw in the wild is ad-hoc implementation of traversal, which are 
+data structure. Rather, what I saw in the wild is ad-hoc implementation of traversal, which are 
 adjusted to the particular shape of the data at hand. This is understandable as tree traversal 
 algorithms, specially the recursive ones, are trivial to implement (5-10 lines of code). 
 
