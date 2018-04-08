@@ -10,6 +10,9 @@
   * [mapOverTree :: Lenses -> MapFn -> Tree -> Tree'](#mapovertree----lenses----mapfn----tree----tree-)
   * [pruneWhen :: Lenses -> Predicate -> Tree -> Tree](#prunewhen----lenses----predicate----tree----tree)
   * [visitTree :: ExtendedTraversalSpecs -> Tree -> A](#visittree----extendedtraversalspecs----tree----a)
+- [Tests](#tests)
+- [Build](#build)
+- [Install](#install)
 
 # Motivation
 There is no shortage of libraries for manipulating trees in javascript. Because we seek to 
