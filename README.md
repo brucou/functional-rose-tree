@@ -207,7 +207,7 @@ QUnit.test("main case - breadthFirstTraverseTree", function exec_test(assert) {
     "midright"
   ];
 
-  assert.deepEqual(actual, expected, `Fails!`);
+  assert.deepEqual(actual, expected, `Works!`);
 });
 ```
 
@@ -239,7 +239,7 @@ QUnit.test("main case - preorderTraverseTree", function exec_test(assert) {
     "right"
   ];
 
-  assert.deepEqual(actual, expected, `Fails!`);
+  assert.deepEqual(actual, expected, `Works!`);
 });
 ```
 
@@ -275,7 +275,7 @@ QUnit.test("main case - postOrderTraverseTree", function exec_test(assert) {
     "root"
   ];
 
-  assert.deepEqual(actual, expected, `Fails!`);
+  assert.deepEqual(actual, expected, `Works!`);
 });
 ```
 
@@ -314,7 +314,7 @@ QUnit.test("main case - reduceTree", function exec_test(assert) {
     "midright"
   ];
 
-  assert.deepEqual(actual, expected, `Fails!`);
+  assert.deepEqual(actual, expected, `Works!`);
 });
 ```
 
@@ -409,7 +409,7 @@ QUnit.test("main case - forEachInTree", function exec_test(assert) {
     "root"
   ];
 
-  assert.deepEqual(actual, expected, `Fails!`);
+  assert.deepEqual(actual, expected, `Works!`);
 });
 ```
 
@@ -466,7 +466,7 @@ QUnit.test("main case - mapOverTree", function exec_test(assert) {
     "label": "Map:root"
   };
 
-  assert.deepEqual(actual, expected, `Fails!`);
+  assert.deepEqual(actual, expected, `Works!`);
 });
 
 ```
@@ -515,7 +515,7 @@ QUnit.test("main case - pruneWhen", function exec_test(assert) {
     "label": "root"
   };
 
-  assert.deepEqual(actual, expected, `Fails!`);
+  assert.deepEqual(actual, expected, `Works!`);
 });
 ```
 ## visitTree :: ExtendedTraversalSpecs -> Tree -> A
