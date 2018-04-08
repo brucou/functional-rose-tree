@@ -21,7 +21,7 @@ focus on general multi-way trees, we have excluded those libraries focusing on s
 look at trees from a visualization perspective (for instance [jstree](https://www.jstree.com/)), as 
 we focus here on handling the data structure, and providing a few basic operations on it.
 
-Such libraries include, among the most interesting subjects :
+Such libraries include, among the most interesting subjects, in order of interest :
 
 - [tree-morph](https://github.com/ngryman/tree-morph) : maintained, API features traversal only, 
 free tree format, tree is immutable, allows partial traversal (node skipping), iterative algorithms
