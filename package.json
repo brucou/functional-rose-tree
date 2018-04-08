@@ -2,7 +2,7 @@
   "name": "fp-rosetree",
   "author": "Olivier Couriol",
   "repository": "https://github.com/brucou/functional-rose-tree.git",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "license": "Apache-2.0",
   "scripts": {
     "build": "parcel build index.js --no-minify --out-file functional_rose_tree",
