@@ -20,9 +20,15 @@ we focus here on handling the data structure, and providing a few basic operatio
 
 Such libraries include, among the most interesting subjects :
 
+- [tree-morph](https://github.com/ngryman/tree-morph) : maintained, API features traversal only, 
+free tree format, tree is immutable, allows partial traversal (node skipping), iterative algorithms
+- [tree-crawl](https://github.com/ngryman/tree-crawl) : maintained, API features traversal only, 
+free tree format, tree is mutable, claims to be optimized for performance!, nice API for skipping
+ nodes or canceling a traversal, iterative algorithms
 - [tree-model](http://jnuno.com/tree-model-js/) : maintained and contributed to, imperative 
 object-based API, basic operations (traversal, find) together with utility functions (`isRoot`, 
-etc.) supporting the imperative portion of the API, nice [demo site](http://jnuno.com/tree-model-js/)!
+etc.) supporting the imperative portion of the API, recursive algorithms, nice [demo site]
+(http://jnuno.com/tree-model-js/)!
 - [arboreal](https://github.com/afiore/arboreal) : ancient, no longer maintained, imperative API, 
 imposed tree format, only basic operations
 - [t-js](https://github.com/aaronj1335/t-js) : ancient, no longer maintained, semi-functional 

@@ -1,5 +1,5 @@
 {
-  "name": "rosetree",
+  "name": "fp-rosetree",
   "author": "Olivier Couriol",
   "repository": "https://github.com/brucou/functional-rose-tree.git",
   "version": "0.1.0",
@@ -11,7 +11,6 @@
     "dist": "npm run umd && npm run min",
     "umd": "rollup index.js -o dist/rosetree.umd.js -f umd --name Rosetree --sourcemap ",
     "min": "rollup index.js -o dist/rosetree.umd.min.js -f umd --name Rosetree --sourcemap -c rollup.config.js "
-
   },
   "devDependencies": {
     "babel-core": "^6.26.0",
