@@ -100,12 +100,12 @@ In our API, we will use a parameter `lenses` which will provide an implementatio
  
  - `getLabel :: T -> E`
  - `getChildren :: T -> F`
- - `setTree :: E x F -> T` 
+ - `constructTree :: E x F -> T` 
  - `nil` (the empty forest) will be taken by default to be the empty list (`[]`). A forest being 
  a list of trees, it is convenient that the empty forest be an empty list.
 
 These functions are gathered into the `lenses` parameter, as, just like lenses, they allow to 
-focus on a portion of a composite data structure. `setTree` can be viewed both as a constructor, 
+focus on a portion of a composite data structure. `constructTree` can be viewed both as a constructor, 
 and as the setter part of a lens on the tree.
 
 For instance, the tree-like object `{label : 'root', children : [{label:'left'}, {label: 
@@ -113,7 +113,7 @@ For instance, the tree-like object `{label : 'root', children : [{label:'left'},
 
 - `getLabel = tree => tree.label`
 - `getChildren = tree => tree.children || []`
-- `setTree = (label, children) => ({label, children})`
+- `constructTree = (label, children) => ({label, children})`
 
 [^1]: Bird, Richard (1998). Introduction to Functional Programming using Haskell. Hemel Hempstead, Hertfordshire, UK: Prentice Hall Europe. p. 195. ISBN 0-13-484346-0.
 
@@ -128,7 +128,7 @@ used easily to curry any relevant provided function.
 # Key contracts
 ## Key types
 - `Traversal :: BFS | PRE_ORDER | POST_ORDER`
-- `Lenses :: {{getLabel :: T -> E, getChildren :: T -> F, setTree :: ExF -> T}}`
+- `Lenses :: {{getLabel :: T -> E, getChildren :: T -> F, constructTree :: ExF -> T}}`
 - `State :: {{isAdded :: Boolean, isVisited :: Boolean, path :: Array<Number>, ...}}` (extensible
  record)
 - `TraversalState :: Map<T, State>`
@@ -168,7 +168,7 @@ final accumulated reduction.
 - `State :: {{isAdded :: Boolean, isVisited :: Boolean, path :: Array<Number>, ...}}` (extensible
  record)
 - `TraversalState :: Map<T, State>`
-- `Lenses :: {{getLabel :: T -> E, getChildren :: T -> F, setTree :: ExF -> T}}`
+- `Lenses :: {{getLabel :: T -> E, getChildren :: T -> F, constructTree :: ExF -> T}}`
 - `Reducer<A, T, TraversalState> :: A -> TraversalState -> T -> A`
 - `TraverseSpecs :: {{strategy :: Optional<Traversal>, seed : A, visit :: Reducer<A, T, TraversalState> }}`
 
@@ -231,7 +231,7 @@ the final accumulated reduction.
 - `State :: {{isAdded :: Boolean, isVisited :: Boolean, path :: Array<Number>, ...}}` (extensible
  record)
 - `TraversalState :: Map<T, State>`
-- `Lenses :: {{getLabel :: T -> E, getChildren :: T -> F, setTree :: ExF -> T}}`
+- `Lenses :: {{getLabel :: T -> E, getChildren :: T -> F, constructTree :: ExF -> T}}`
 - `Reducer<A, T, TraversalState> :: A -> TraversalState -> T -> A`
 - `TraverseSpecs :: {{strategy :: Optional<Traversal>, seed : A, visit :: Reducer<A, T, TraversalState> }}`
 
@@ -263,7 +263,7 @@ the final accumulated reduction.
 - `State :: {{isAdded :: Boolean, isVisited :: Boolean, path :: Array<Number>, ...}}` (extensible
  record)
 - `TraversalState :: Map<T, State>`
-- `Lenses :: {{getLabel :: T -> E, getChildren :: T -> F, setTree :: ExF -> T}}`
+- `Lenses :: {{getLabel :: T -> E, getChildren :: T -> F, constructTree :: ExF -> T}}`
 - `Reducer<A, T, TraversalState> :: A -> TraversalState -> T -> A`
 - `TraverseSpecs :: {{strategy :: Optional<Traversal>, seed : A, visit :: Reducer<A, T, TraversalState> }}`
 
@@ -301,7 +301,7 @@ traversing the tree, and returning the final accumulated reduction.
 - `State :: {{isAdded :: Boolean, isVisited :: Boolean, path :: Array<Number>, ...}}` (extensible
  record)
 - `TraversalState :: Map<T, State>`
-- `Lenses :: {{getLabel :: T -> E, getChildren :: T -> F, setTree :: ExF -> T}}`
+- `Lenses :: {{getLabel :: T -> E, getChildren :: T -> F, constructTree :: ExF -> T}}`
 - `Reducer<A, T, TraversalState> :: A -> TraversalState -> T -> A`
 - `TraverseSpecs :: {{strategy :: Traversal, seed : A, visit :: Reducer<A, T, TraversalState> }}`
 
@@ -342,7 +342,7 @@ execute on each traversed portion of the tree. The same stands for the `strategy
 - `State :: {{isAdded :: Boolean, isVisited :: Boolean, path :: Array<Number>, ...}}` (extensible
  record)
 - `TraversalState :: Map<T, State>`
-- `Lenses :: {{getLabel :: T -> E, getChildren :: T -> F, setTree :: ExF -> T}}`
+- `Lenses :: {{getLabel :: T -> E, getChildren :: T -> F, constructTree :: ExF -> T}}`
 - `Action :: T -> traversalState -> ()`
 - `TraverseSpecs :: {{strategy :: Traversal, action :: Action }}`
 
@@ -427,7 +427,7 @@ QUnit.test("main case - forEachInTree", function exec_test(assert) {
 Traverse a tree, applying a mapping function, while, and returning a tree with the same 
 structure, containing the mapped nodes. Order of traversal is irrelevant here, as all nodes of 
 the tree are to be traversed, and the mapping function is assumed to be a pure function. Note 
-that the `setTree` lens is mandatory here to rebuild the tree from its nodes.
+that the `constructTree` lens is mandatory here to rebuild the tree from its nodes.
 
 ### Types
 - `Tree :: T`
@@ -435,7 +435,7 @@ that the `setTree` lens is mandatory here to rebuild the tree from its nodes.
 - `Traversal :: BFS | PRE_ORDER | POST_ORDER`
 - `State :: {{isAdded :: Boolean, isVisited :: Boolean, path :: Array<Number>, ...}}` (extensible record)
 - `TraversalState :: Map<T, State>`
-- `Lenses :: {{getLabel :: T -> E, getChildren :: T -> F, setTree :: ExF -> T}}`
+- `Lenses :: {{getLabel :: T -> E, getChildren :: T -> F, constructTree :: ExF -> T}}`
 - `MapFn :: E -> E'`
 
 ### Examples
@@ -484,7 +484,7 @@ QUnit.test("main case - mapOverTree", function exec_test(assert) {
 ### Description 
 Traverse a tree, applying a predicate, which when failed leads to discarding any descendant 
 nodes of the node failing that predicate. The failing node itself remains in the result tree. 
- Note that the `setTree` lens is mandatory here to rebuild the tree from its nodes. Note also 
+ Note that the `constructTree` lens is mandatory here to rebuild the tree from its nodes. Note also 
  that the predicate is passed the traversal state, together with the node. This allows to 
  implement stop conditions by modifying directly the traversal state (adding for instance a 
  `isTraversalStopped` flag).
@@ -493,7 +493,7 @@ nodes of the node failing that predicate. The failing node itself remains in the
 - `Tree :: T`
 - `State :: {{isAdded :: Boolean, isVisited :: Boolean, path :: Array<Number>, ...}}` (extensible record)
 - `TraversalState :: Map<T, State>`
-- `Lenses :: {{getLabel :: T -> E, getChildren :: T -> F, setTree :: ExF -> T}}`
+- `Lenses :: {{getLabel :: T -> E, getChildren :: T -> F, constructTree :: ExF -> T}}`
 - `Predicate :: T -> TraversalState -> Boolean`
 
 ### Examples
@@ -554,7 +554,7 @@ Maybe<T>, isEmpty :: Store -> Boolean}}`
 - `State :: {{isAdded :: Boolean, isVisited :: Boolean, path :: Array<Number>, ...}}` (extensible
  record)
 - `TraversalState :: Map<T, State>`
-- `Lenses :: {{getLabel :: T -> E, getChildren :: T -> F, setTree :: ExF -> T}}`
+- `Lenses :: {{getLabel :: T -> E, getChildren :: T -> F, constructTree :: ExF -> T}}`
 - `Reducer<A, T, TraversalState> :: A -> TraversalState -> T -> A`
 - `TraverseSpecs :: {{seed : A, visit :: Reducer<A, T, TraversalState> }}`
 - `ExtendedTraversalSpecs :: {{store :: Store, lenses :: Lenses, traverse :: TraverseSpecs}}`
