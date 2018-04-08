@@ -630,8 +630,11 @@ export function postOrderTraverseTree(lenses, traverse, tree) {
 ```
 
 # Tests
-- npm run test
+- `npm run test`
 
 # Build
-- npm run build
-- npm run dist 
+- `npm run build`
+- `npm run dist` 
+
+# Install
+- `npm fp-rosetree`
