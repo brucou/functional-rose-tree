@@ -540,8 +540,8 @@ cases where the traversal tasks to generate or visit to undertake depend on the 
 - `Tree :: T`
 - `Traversal :: BFS | PRE_ORDER | POST_ORDER`
 - `EmptyStore :: *`
-- `Store :: {{empty :: EmptyStore, add :: [T] -> Store -> (), takeAndRemoveOne :: Store -> T, 
-isEmpty :: Store -> Boolean}}`
+- `Store :: {{empty :: EmptyStore, add :: [T] -> Store -> (), takeAndRemoveOne :: Store -> 
+Maybe<T>, isEmpty :: Store -> Boolean}}`
 - `State :: {{isAdded :: Boolean, isVisited :: Boolean, path :: Array<Number>, ...}}` (extensible
  record)
 - `TraversalState :: Map<T, State>`
