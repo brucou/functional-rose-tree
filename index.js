@@ -234,7 +234,7 @@ export function mapOverTree(lenses, mapFn, tree) {
       const mappedChildren = times(
         index => pathMap.get(stringify(path.concat(index))), getChildrenNumber(tree, traversalState));
       const mappedTree = constructTree(mappedLabel, mappedChildren);
-      debugger
+
       pathMap.set(stringify(path), mappedTree);
 
       return pathMap;
