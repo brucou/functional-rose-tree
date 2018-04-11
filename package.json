@@ -4,6 +4,8 @@
   "repository": "https://github.com/brucou/functional-rose-tree.git",
   "version": "0.2.2",
   "license": "Apache-2.0",
+  "module" : "index.js",
+  "main" : "dist/rosetree.umd.js",
   "scripts": {
     "build": "parcel build index.js --no-minify --out-file functional_rose_tree",
     "serve": "parcel build index.js --out-file functional_rose_tree.min",

@@ -237,7 +237,7 @@ export function mapOverTree(lenses, mapFn, tree) {
 
       pathMap.set(stringify(path), mappedTree);
 
-      return pathMap;
+        return pathMap;
     }
   };
   const pathMap = postOrderTraverseTree(lenses, treeTraveerse, tree);
