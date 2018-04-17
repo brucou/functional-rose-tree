@@ -539,7 +539,7 @@ This is the generic tree traversal algorithm that all traversals use as their co
 - the traversal state includes flags (`isAdded`, `isVisited`) and relevant information (`path`) 
 to the traversal
 - the traversal state is passed to the `getChildren` lens, and the visitor function, for those 
-cases where the traversal tasks to generate or visit to undertake depend on the traversal state 
+cases where the traversal tasks to generate, or visits to undertake, depend on the traversal state 
   - that is for instance the case for iterative post-order traversal, where we traverse a parent 
   node twice, but only visit it once, after its children have been visited)
   - that is also the case for incomplete traversals (`pruneWhen`), where we discard traversing 
