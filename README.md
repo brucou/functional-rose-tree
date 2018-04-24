@@ -641,3 +641,36 @@ export function postOrderTraverseTree(lenses, traverse, tree) {
 
 # Install
 - `npm fp-rosetree`
+
+#Tips
+## Object traversal
+An object can be traversed with the following lenses : 
+
+```dart
+  const lenses = {
+    getLabel: tree => {
+      if (typeof tree === 'object' && Object.keys(tree).length === 1){
+        const value = Object.values(tree)[0];
+        if (typeof value !== 'object' || Array.isArray(value) ) {
+          return value
+        }
+      }
+
+      return undefined
+    },
+    getChildren : tree => {
+      if ((typeof tree === 'object') && Object.keys(tree).length === 1 ){
+        const value = Object.values(tree)[0];
+        if (typeof value === 'object' && !Array.isArray(value)){
+          return Object.keys(value).map(prop => ({[prop]:value[prop]}))
+        }
+      }
+      return []
+    },
+    // NOTE : it is not possible to construct back the tree from (label, children) information
+  };
+```
+
+Note that an object cannot be mapped over with our tree library, as there is no way to reconstruct 
+the object from just the children information. For this purpose, a recursive use of Ramda 
+`evolve` function will come in handy.
