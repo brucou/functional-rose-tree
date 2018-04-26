@@ -57,11 +57,12 @@ nodes, and at the same time allows natural composition and chaining of tree oper
 
 As a conclusion, these are the design choices made for this library :
 - manipulation of tree data structure is based on ADT, i.e. not on a specific or concrete data 
-structure as the aforementioned libraries. Those two possible concrete data structures for a tree 
+structure as the aforementioned libraries. Those three possible concrete data structures for a tree 
 should be handled by the library just as easily : 
   - `[root, [left, [middle, [midright, midleft]], right]]`, or more commonly 
   - `{label : 'root', children : [{label:'left'}, {label: 'right'}]}`.
-- inmutability of tree nodes
+  - `{key0 : {key0.0 : {}, key0.1 : 'something'}, key1 : 2018}`
+- immutability of tree nodes
 - iterative traversal algorithms
 - basic operations available : bfs/dfs/post-order traversals, map/reduce/prune(~filter)/find 
 operations
@@ -642,35 +643,46 @@ export function postOrderTraverseTree(lenses, traverse, tree) {
 # Install
 - `npm fp-rosetree`
 
-#Tips
+# Examples of lenses
 ## Object traversal
 An object can be traversed with the following lenses : 
 
 ```dart
   const lenses = {
     getLabel: tree => {
-      if (typeof tree === 'object' && Object.keys(tree).length === 1){
-        const value = Object.values(tree)[0];
-        if (typeof value !== 'object' || Array.isArray(value) ) {
-          return value
+      if (typeof tree === 'object' && !Array.isArray(tree) && Object.keys(tree).length === 1) {
+        return { key: Object.keys(tree)[0], value: Object.values(tree)[0] };
+      }
+      else {
+        throw `getLabel > unexpected tree value`
+      }
+    },
+    getChildren: tree => {
+      if (typeof tree === 'object' && !Array.isArray(tree) && Object.keys(tree).length === 1) {
+        let value = Object.values(tree)[0];
+        if (typeof value === 'object' && !Array.isArray(value)) {
+          return Object.keys(value).map(prop => ({ [prop]: value[prop] }))
+        }
+        else {
+          return []
         }
       }
-
-      return undefined
-    },
-    getChildren : tree => {
-      if ((typeof tree === 'object') && Object.keys(tree).length === 1 ){
-        const value = Object.values(tree)[0];
-        if (typeof value === 'object' && !Array.isArray(value)){
-          return Object.keys(value).map(prop => ({[prop]:value[prop]}))
-        }
+      else {
+        throw `getChildren > unexpected value`
       }
-      return []
     },
-    // NOTE : it is not possible to construct back the tree from (label, children) information
+    constructTree: (label, children) => {
+      const childrenAcc = children.reduce((acc, child) => {
+        let key = Object.keys(child)[0];
+        acc[key] = child[key];
+        return acc
+      }, {});
+      return {
+        [label.key]: children.length === 0 ? label.value : childrenAcc
+      }
+    },
+    isLeafLabel : label => lenses.getChildren({[label.key]:label.value}).length === 0
   };
 ```
 
-Note that an object cannot be mapped over with our tree library, as there is no way to reconstruct 
-the object from just the children information. For this purpose, a recursive use of Ramda 
-`evolve` function will come in handy.
+Cf. tests for examples with mapping over object keys and properties and traversing objects. 

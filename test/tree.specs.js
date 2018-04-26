@@ -6,7 +6,7 @@ import {
   pruneWhen, reduceTree
 } from "../";
 
-function merge (objA, objB){
+function merge(objA, objB) {
   return Object.assign({}, objA, objB);
 }
 
@@ -83,7 +83,7 @@ QUnit.test("main case - postOrderTraverseTree", function exec_test(assert) {
 });
 
 QUnit.test("main case - reduceTree", function exec_test(assert) {
-  const reduceTraverse = merge(traverse, {"strategy" : BFS});
+  const reduceTraverse = merge(traverse, { "strategy": BFS });
   const actual = reduceTree(lenses, reduceTraverse, tree);
   const expected = [
     "root",
@@ -235,4 +235,202 @@ QUnit.test("main case - pruneWhen", function exec_test(assert) {
   };
 
   assert.deepEqual(actual, expected, `Works!`);
+});
+
+QUnit.module("Testing tree traversal with objects", {});
+
+QUnit.test("main case - object traversal - map over", function exec_test(assert) {
+  const lenses = {
+    getLabel: tree => {
+      if (typeof tree === 'object' && !Array.isArray(tree) && Object.keys(tree).length === 1) {
+        return { key: Object.keys(tree)[0], value: Object.values(tree)[0] };
+      }
+      else {
+        throw `getLabel > unexpected tree value`
+      }
+    },
+    getChildren: tree => {
+      if (typeof tree === 'object' && !Array.isArray(tree) && Object.keys(tree).length === 1) {
+        let value = Object.values(tree)[0];
+        if (typeof value === 'object' && !Array.isArray(value)) {
+          return Object.keys(value).map(prop => ({ [prop]: value[prop] }))
+        }
+        else {
+          return []
+        }
+      }
+      else {
+        throw `getChildren > unexpected value`
+      }
+    },
+    constructTree: (label, children) => {
+      const childrenAcc = children.reduce((acc, child) => {
+        let key = Object.keys(child)[0];
+        acc[key] = child[key];
+        return acc
+      }, {});
+      return {
+        [label.key]: children.length === 0 ? label.value : childrenAcc
+      }
+    },
+    isLeafLabel : label => lenses.getChildren({[label.key]:label.value}).length === 0
+  };
+
+  function isEmptyObject(obj){
+    return obj && Object.keys(obj).length === 0 && obj.constructor === Object
+  }
+
+  function mapOverObj(lenses, {key : mapKeyfn, leafValue:mapValuefn}, obj){
+    const rootKey = 'root';
+    const rootKeyMap = mapKeyfn(rootKey);
+
+    return mapOverTree(lenses, ({key, value}) => ({
+      key: mapKeyfn(key),
+      value: lenses.isLeafLabel({key, value}) && !isEmptyObject(value)
+        ? mapValuefn(value)
+        : value
+    }), { root: obj })[rootKeyMap];
+  }
+
+  const obj =     {
+      "combinatorName": undefined,
+      "componentName": "sinkUpdatingComponent",
+      "emits": {
+        "identifier": "a_circular_behavior_source",
+        "notification": {
+          "kind": "N",
+          "value": {
+            "key": "value"
+          }
+        },
+        "type": 0
+      },
+      "id": 3,
+      "logType": "runtime",
+      "path": [
+        0,
+        0,
+        0,
+        2
+      ],
+      "settings": {}
+    }
+  ;
+
+  const actual = mapOverObj(lenses, {key : key => 'K' + key, leafValue : value => 'K' + value}, obj );
+  const expected = {
+      "KcombinatorName": "Kundefined",
+      "KcomponentName": "KsinkUpdatingComponent",
+      "Kemits": {
+        "Kidentifier": "Ka_circular_behavior_source",
+        "Knotification": {
+          "Kkind": "KN",
+          "Kvalue": {
+            "Kkey": "Kvalue"
+          }
+        },
+        "Ktype": "K0"
+      },
+      "Kid": "K3",
+      "KlogType": "Kruntime",
+      "Kpath": "K0,0,0,2",
+      "Ksettings": {}
+  };
+
+  assert.deepEqual(actual, expected, `Works!`);
+});
+
+QUnit.test("main case - object traversal - traverse", function exec_test(assert) {
+  const traces = [];
+  const lenses = {
+    getLabel: tree => {
+      if (typeof tree === 'object' && !Array.isArray(tree) && Object.keys(tree).length === 1) {
+        return { key: Object.keys(tree)[0], value: Object.values(tree)[0] };
+      }
+      else {
+        throw `getLabel > unexpected tree value`
+      }
+    },
+    getChildren: tree => {
+      if (typeof tree === 'object' && !Array.isArray(tree) && Object.keys(tree).length === 1) {
+        let value = Object.values(tree)[0];
+        if (typeof value === 'object' && !Array.isArray(value)) {
+          return Object.keys(value).map(prop => ({ [prop]: value[prop] }))
+        }
+        else {
+          return []
+        }
+      }
+      else {
+        throw `unexpected value`
+      }
+    },
+    constructTree: (label, children) => {
+      const childrenAcc = children.reduce((acc, child) => {
+        let key = Object.keys(child)[0];
+        acc[key] = child[key];
+        return acc
+      }, {});
+      return {
+        [label.key]: children.length === 0 ? label.value : childrenAcc
+      }
+    },
+    isLeafLabel : label => lenses.getChildren({[label.key]:label.value}).length === 0
+  };
+
+  const traverse = {
+    seed: {},
+    visit: (visitAcc, traversalState, obj) => {
+      return traces.push(traversalState.get(obj).path + `: ${Object.keys(obj)[0]}`)
+    }
+  }
+
+  function traverseObj(lenses, traverse, obj) {
+    breadthFirstTraverseTree(lenses, traverse, { root: obj })
+  }
+
+  const obj =     {
+      "combinatorName": undefined,
+      "componentName": "sinkUpdatingComponent",
+      "emits": {
+        "identifier": "a_circular_behavior_source",
+        "notification": {
+          "kind": "N",
+          "value": {
+            "key": "value"
+          }
+        },
+        "type": 0
+      },
+      "id": 3,
+      "logType": "runtime",
+      "path": [
+        0,
+        0,
+        0,
+        2
+      ],
+      "settings": {}
+    }
+  ;
+
+  traverseObj(lenses, traverse, obj );
+  const expected = [
+    "0: root",
+    "0,0: combinatorName",
+    "0,1: componentName",
+    "0,2: emits",
+    "0,3: id",
+    "0,4: logType",
+    "0,5: path",
+    "0,6: settings",
+    "0,2,0: identifier",
+    "0,2,1: notification",
+    "0,2,2: type",
+    "0,2,1,0: kind",
+    "0,2,1,1: value",
+    "0,2,1,1,0: key"
+  ];
+
+  assert.deepEqual(traces, expected, `Works!`);
 });
