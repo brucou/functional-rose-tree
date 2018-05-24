@@ -4722,3 +4722,4 @@ QUnit.test("main case - object traversal", function exec_test(assert) {
 
   assert.deepEqual(actual, expected, `Works!`);
 });
+

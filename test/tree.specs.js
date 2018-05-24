@@ -273,26 +273,26 @@ QUnit.test("main case - object traversal - map over", function exec_test(assert)
         [label.key]: children.length === 0 ? label.value : childrenAcc
       }
     },
-    isLeafLabel : label => lenses.getChildren({[label.key]:label.value}).length === 0
+    isLeafLabel: label => lenses.getChildren({ [label.key]: label.value }).length === 0
   };
 
-  function isEmptyObject(obj){
+  function isEmptyObject(obj) {
     return obj && Object.keys(obj).length === 0 && obj.constructor === Object
   }
 
-  function mapOverObj(lenses, {key : mapKeyfn, leafValue:mapValuefn}, obj){
+  function mapOverObj(lenses, { key: mapKeyfn, leafValue: mapValuefn }, obj) {
     const rootKey = 'root';
     const rootKeyMap = mapKeyfn(rootKey);
 
-    return mapOverTree(lenses, ({key, value}) => ({
+    return mapOverTree(lenses, ({ key, value }) => ({
       key: mapKeyfn(key),
-      value: lenses.isLeafLabel({key, value}) && !isEmptyObject(value)
+      value: lenses.isLeafLabel({ key, value }) && !isEmptyObject(value)
         ? mapValuefn(value)
         : value
     }), { root: obj })[rootKeyMap];
   }
 
-  const obj =     {
+  const obj = {
       "combinatorName": undefined,
       "componentName": "sinkUpdatingComponent",
       "emits": {
@@ -317,24 +317,24 @@ QUnit.test("main case - object traversal - map over", function exec_test(assert)
     }
   ;
 
-  const actual = mapOverObj(lenses, {key : key => 'K' + key, leafValue : value => 'K' + value}, obj );
+  const actual = mapOverObj(lenses, { key: key => 'K' + key, leafValue: value => 'K' + value }, obj);
   const expected = {
-      "KcombinatorName": "Kundefined",
-      "KcomponentName": "KsinkUpdatingComponent",
-      "Kemits": {
-        "Kidentifier": "Ka_circular_behavior_source",
-        "Knotification": {
-          "Kkind": "KN",
-          "Kvalue": {
-            "Kkey": "Kvalue"
-          }
-        },
-        "Ktype": "K0"
+    "KcombinatorName": "Kundefined",
+    "KcomponentName": "KsinkUpdatingComponent",
+    "Kemits": {
+      "Kidentifier": "Ka_circular_behavior_source",
+      "Knotification": {
+        "Kkind": "KN",
+        "Kvalue": {
+          "Kkey": "Kvalue"
+        }
       },
-      "Kid": "K3",
-      "KlogType": "Kruntime",
-      "Kpath": "K0,0,0,2",
-      "Ksettings": {}
+      "Ktype": "K0"
+    },
+    "Kid": "K3",
+    "KlogType": "Kruntime",
+    "Kpath": "K0,0,0,2",
+    "Ksettings": {}
   };
 
   assert.deepEqual(actual, expected, `Works!`);
@@ -375,7 +375,7 @@ QUnit.test("main case - object traversal - traverse", function exec_test(assert)
         [label.key]: children.length === 0 ? label.value : childrenAcc
       }
     },
-    isLeafLabel : label => lenses.getChildren({[label.key]:label.value}).length === 0
+    isLeafLabel: label => lenses.getChildren({ [label.key]: label.value }).length === 0
   };
 
   const traverse = {
@@ -389,7 +389,7 @@ QUnit.test("main case - object traversal - traverse", function exec_test(assert)
     breadthFirstTraverseTree(lenses, traverse, { root: obj })
   }
 
-  const obj =     {
+  const obj = {
       "combinatorName": undefined,
       "componentName": "sinkUpdatingComponent",
       "emits": {
@@ -414,7 +414,7 @@ QUnit.test("main case - object traversal - traverse", function exec_test(assert)
     }
   ;
 
-  traverseObj(lenses, traverse, obj );
+  traverseObj(lenses, traverse, obj);
   const expected = [
     "0: root",
     "0,0: combinatorName",
@@ -433,4 +433,168 @@ QUnit.test("main case - object traversal - traverse", function exec_test(assert)
   ];
 
   assert.deepEqual(traces, expected, `Works!`);
+});
+
+QUnit.test("main case - hashed-tree traversal - traverse", function exec_test(assert) {
+  const traces = [];
+  const sep = '.';
+
+  function makeChildCursor(parentCursor, childIndex, sep) {
+    return [parentCursor, childIndex].join(sep)
+  }
+
+  const lenses = {
+    getLabel: tree => {
+      const { cursor, hash } = tree;
+      return hash[cursor]
+    },
+    getChildren: tree => {
+      const { cursor, hash } = tree;
+      let childIndex = 0;
+      let children = [];
+
+      while ( makeChildCursor(cursor, childIndex, sep) in hash ) {
+        children.push({ cursor: makeChildCursor(cursor, childIndex, '.'), hash })
+        childIndex++;
+      }
+
+      return children
+    },
+  };
+
+  const traverse = {
+    seed: {},
+    visit: (visitAcc, traversalState, obj) => {
+      return traces.push(traversalState.get(obj).path + `: ${obj.hash[obj.cursor]}`)
+    }
+  }
+
+  function traverseObj(lenses, traverse, obj) {
+    breadthFirstTraverseTree(lenses, traverse, obj)
+  }
+
+  const hash = {
+    "0": "root",
+    "0.0": "combinatorName",
+    "0.1": "componentName",
+    "0.2": "emits",
+    "0.3": "id",
+    "0.4": "logType",
+    "0.5": "path",
+    "0.6": "settings",
+    "0.2.0": "identifier",
+    "0.2.1": "notification",
+    "0.2.2": "type",
+    "0.2.1.0": "kind",
+    "0.2.1.1": "value",
+    "0.2.1.1.0": "key"
+  };
+  const obj = {
+      cursor: "0",
+      hash
+    }
+  ;
+
+  traverseObj(lenses, traverse, obj);
+  const expected = [];
+
+  assert.deepEqual(traces, expected, `Works!`);
+});
+
+QUnit.test("main case - hashed-tree traversal - map over", function exec_test(assert) {
+  const traces = [];
+  const sep = '.';
+
+  function makeChildCursor(parentCursor, childIndex, sep) {
+    return [parentCursor, childIndex].join(sep)
+  }
+
+  const lenses = {
+    getLabel: tree => {
+      const { cursor, hash } = tree;
+      return { label: hash[cursor], hash, cursor }
+    },
+    getChildren: tree => {
+      const { cursor, hash } = tree;
+      let childIndex = 0;
+      let children = [];
+
+      while ( makeChildCursor(cursor, childIndex, sep) in hash ) {
+        children.push({ cursor: makeChildCursor(cursor, childIndex, sep), hash })
+        childIndex++;
+      }
+
+      return children
+    },
+    constructTree: (label, children) => {
+      const { label: value, hash, cursor } = label;
+
+      return {
+        cursor: cursor,
+        hash: merge(
+          children.reduce((acc, child) => merge(acc, child.hash), {}),
+          { [cursor]: value }
+        )
+      }
+    },
+  };
+
+  const hash = {
+    "0": "root",
+    "0.0": "combinatorName",
+    "0.1": "componentName",
+    "0.2": "emits",
+    "0.3": "id",
+    "0.2.0": "identifier",
+    "0.2.1": "notification",
+    "0.2.2": "type",
+    "0.2.1.0": "kind",
+    "0.2.1.1": "value",
+    "0.2.1.1.0": "key"
+  };
+  const hash_orig = {
+    "0": "root",
+    "0.0": "combinatorName",
+    "0.1": "componentName",
+    "0.2": "emits",
+    "0.3": "id",
+    "0.2.0": "identifier",
+    "0.2.1": "notification",
+    "0.2.2": "type",
+    "0.2.1.0": "kind",
+    "0.2.1.1": "value",
+    "0.2.1.1.0": "key"
+  };
+  const obj = {
+      cursor: "0",
+      hash
+    }
+  ;
+
+  function mapOverHashTree(lenses, mapFn, obj) {
+    return mapOverTree(lenses, ({ label, hash, cursor }) => ({
+      label: mapFn(label), hash, cursor
+    }), obj);
+  }
+
+  const actual = mapOverHashTree(lenses, label => 'M-' + label, obj);
+  const expected = {
+    "cursor": "0",
+    "hash": {
+      "0": "M-root",
+      "0.0": "M-combinatorName",
+      "0.1": "M-componentName",
+      "0.2": "M-emits",
+      "0.2.0": "M-identifier",
+      "0.2.1": "M-notification",
+      "0.2.1.0": "M-kind",
+      "0.2.1.1": "M-value",
+      "0.2.1.1.0": "M-key",
+      "0.2.2": "M-type",
+      "0.3": "M-id",
+    }
+  };
+
+  assert.deepEqual(actual, expected, `Works!`);
+  assert.deepEqual(hash, hash_orig, `Works!`);
 });

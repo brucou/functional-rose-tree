@@ -216,7 +216,7 @@ export function forEachInTree(lenses, traverse, tree) {
  * Applies a function to every node of a tree, while keeping the tree structure. Note that the traversal strategy in
  * that case does not matter, as all nodes will be traversed anyway, and the function to apply is assumed to be a
  * pure function.
- * @param {{getChildren : function, setChildren : function, setLabel : function}} lenses
+ * @param {{getChildren : function, getLabel : function, constructTree: function}} lenses
  * @param {function} mapFn Function to apply to each node.
  * @param tree
  * @returns {*}

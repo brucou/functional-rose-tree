@@ -647,7 +647,7 @@ export function postOrderTraverseTree(lenses, traverse, tree) {
 ## Object traversal
 An object can be traversed with the following lenses : 
 
-```dart
+```javascript
   const lenses = {
     getLabel: tree => {
       if (typeof tree === 'object' && !Array.isArray(tree) && Object.keys(tree).length === 1) {
@@ -686,3 +686,70 @@ An object can be traversed with the following lenses :
 ```
 
 Cf. tests for examples with mapping over object keys and properties and traversing objects. 
+
+## Hash-stored tree
+We mean by hash-stored tree (by lack of a better name) a tree whose content is mapped to its 
+location path through a hash map. That is the data structure is : `Record {cursor :: Cursor, hash 
+:: HashMap<Cursor, Tree>}`. The cursor is usually a string which allows to point at a specific 
+subtree. 
+
+An example of such concrete data structure is as follows :
+
+```javascript
+  const hash = {
+    "0": "root",
+    "0.0": "combinatorName",
+    "0.1": "componentName",
+    "0.2": "emits",
+    "0.3": "id",
+    "0.2.0": "identifier",
+    "0.2.1": "notification",
+    "0.2.2": "type",
+    "0.2.1.0": "kind",
+    "0.2.1.1": "value",
+    "0.2.1.1.0": "key"
+  };
+  const obj  { cursor : "0", hash};
+```
+
+The corresponding lenses would be as follows :
+
+```javascript
+  const sep = '.';
+
+  function makeChildCursor(parentCursor, childIndex, sep) {
+    return [parentCursor, childIndex].join(sep)
+  }
+
+  const lenses = {
+    getLabel: tree => {
+      const { cursor, hash } = tree;
+      return { label: hash[cursor], hash, cursor }
+    },
+    getChildren: tree => {
+      const { cursor, hash } = tree;
+      let childIndex = 0;
+      let children = [];
+
+      while ( makeChildCursor(cursor, childIndex, sep) in hash ) {
+        children.push({ cursor: makeChildCursor(cursor, childIndex, sep), hash })
+        childIndex++;
+      }
+
+      return children
+    },
+    constructTree: (label, children) => {
+      const { label: value, hash, cursor } = label;
+
+      return {
+        cursor: cursor,
+        hash: merge(
+          children.reduce((acc, child) => merge(acc, child.hash), {}),
+          { [cursor]: value }
+        )
+      }
+    },
+  };
+```
+
+Cf. tests for concrete examples. 
