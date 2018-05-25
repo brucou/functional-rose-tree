@@ -355,7 +355,6 @@ export const ObjectTreeLenses = {
       [label.key]: children.length === 0 ? label.value : childrenAcc
     }
   },
-  isLeafLabel: label => lenses.getChildren({ [label.key]: label.value }).length === 0
 };
 
 export function mapOverObj({ key: mapKeyfn, leafValue: mapValuefn }, obj) {
@@ -364,11 +363,13 @@ export function mapOverObj({ key: mapKeyfn, leafValue: mapValuefn }, obj) {
 
   return mapOverTree(ObjectTreeLenses, ({ key, value }) => ({
     key: mapKeyfn(key),
-    value: ObjectTreeLenses.isLeafLabel({ key, value }) && !isEmptyObject(value)
+    value: isLeafLabel({ key, value }) && !isEmptyObject(value)
       ? mapValuefn(value)
       : value
   }), { root: obj })[rootKeyMap];
 }
+
+function isLeafLabel(label ){ return ObjectTreeLenses.getChildren({ [label.key]: label.value }).length === 0}
 
 function isEmptyObject(obj) {
   return obj && Object.keys(obj).length === 0 && obj.constructor === Object
