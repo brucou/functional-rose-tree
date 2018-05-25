@@ -5,6 +5,7 @@ import {
   BFS, breadthFirstTraverseTree, forEachInTree, mapOverTree, POST_ORDER, postOrderTraverseTree, preorderTraverseTree,
   pruneWhen, reduceTree
 } from "../";
+import { getHashedTreeLenses, mapOverHashTree, mapOverObj, ObjectTreeLenses } from "../index"
 
 function merge(objA, objB) {
   return Object.assign({}, objA, objB);
@@ -240,58 +241,6 @@ QUnit.test("main case - pruneWhen", function exec_test(assert) {
 QUnit.module("Testing tree traversal with objects", {});
 
 QUnit.test("main case - object traversal - map over", function exec_test(assert) {
-  const lenses = {
-    getLabel: tree => {
-      if (typeof tree === 'object' && !Array.isArray(tree) && Object.keys(tree).length === 1) {
-        return { key: Object.keys(tree)[0], value: Object.values(tree)[0] };
-      }
-      else {
-        throw `getLabel > unexpected tree value`
-      }
-    },
-    getChildren: tree => {
-      if (typeof tree === 'object' && !Array.isArray(tree) && Object.keys(tree).length === 1) {
-        let value = Object.values(tree)[0];
-        if (typeof value === 'object' && !Array.isArray(value)) {
-          return Object.keys(value).map(prop => ({ [prop]: value[prop] }))
-        }
-        else {
-          return []
-        }
-      }
-      else {
-        throw `getChildren > unexpected value`
-      }
-    },
-    constructTree: (label, children) => {
-      const childrenAcc = children.reduce((acc, child) => {
-        let key = Object.keys(child)[0];
-        acc[key] = child[key];
-        return acc
-      }, {});
-      return {
-        [label.key]: children.length === 0 ? label.value : childrenAcc
-      }
-    },
-    isLeafLabel: label => lenses.getChildren({ [label.key]: label.value }).length === 0
-  };
-
-  function isEmptyObject(obj) {
-    return obj && Object.keys(obj).length === 0 && obj.constructor === Object
-  }
-
-  function mapOverObj(lenses, { key: mapKeyfn, leafValue: mapValuefn }, obj) {
-    const rootKey = 'root';
-    const rootKeyMap = mapKeyfn(rootKey);
-
-    return mapOverTree(lenses, ({ key, value }) => ({
-      key: mapKeyfn(key),
-      value: lenses.isLeafLabel({ key, value }) && !isEmptyObject(value)
-        ? mapValuefn(value)
-        : value
-    }), { root: obj })[rootKeyMap];
-  }
-
   const obj = {
       "combinatorName": undefined,
       "componentName": "sinkUpdatingComponent",
@@ -317,7 +266,7 @@ QUnit.test("main case - object traversal - map over", function exec_test(assert)
     }
   ;
 
-  const actual = mapOverObj(lenses, { key: key => 'K' + key, leafValue: value => 'K' + value }, obj);
+  const actual = mapOverObj({ key: key => 'K' + key, leafValue: value => 'K' + value }, obj);
   const expected = {
     "KcombinatorName": "Kundefined",
     "KcomponentName": "KsinkUpdatingComponent",
@@ -342,48 +291,7 @@ QUnit.test("main case - object traversal - map over", function exec_test(assert)
 
 QUnit.test("main case - object traversal - traverse", function exec_test(assert) {
   const traces = [];
-  const lenses = {
-    getLabel: tree => {
-      if (typeof tree === 'object' && !Array.isArray(tree) && Object.keys(tree).length === 1) {
-        return { key: Object.keys(tree)[0], value: Object.values(tree)[0] };
-      }
-      else {
-        throw `getLabel > unexpected tree value`
-      }
-    },
-    getChildren: tree => {
-      if (typeof tree === 'object' && !Array.isArray(tree) && Object.keys(tree).length === 1) {
-        let value = Object.values(tree)[0];
-        if (typeof value === 'object' && !Array.isArray(value)) {
-          return Object.keys(value).map(prop => ({ [prop]: value[prop] }))
-        }
-        else {
-          return []
-        }
-      }
-      else {
-        throw `unexpected value`
-      }
-    },
-    constructTree: (label, children) => {
-      const childrenAcc = children.reduce((acc, child) => {
-        let key = Object.keys(child)[0];
-        acc[key] = child[key];
-        return acc
-      }, {});
-      return {
-        [label.key]: children.length === 0 ? label.value : childrenAcc
-      }
-    },
-    isLeafLabel: label => lenses.getChildren({ [label.key]: label.value }).length === 0
-  };
-
-  const traverse = {
-    seed: {},
-    visit: (visitAcc, traversalState, obj) => {
-      return traces.push(traversalState.get(obj).path + `: ${Object.keys(obj)[0]}`)
-    }
-  }
+  const lenses = ObjectTreeLenses;
 
   function traverseObj(lenses, traverse, obj) {
     breadthFirstTraverseTree(lenses, traverse, { root: obj })
@@ -437,30 +345,7 @@ QUnit.test("main case - object traversal - traverse", function exec_test(assert)
 
 QUnit.test("main case - hashed-tree traversal - traverse", function exec_test(assert) {
   const traces = [];
-  const sep = '.';
-
-  function makeChildCursor(parentCursor, childIndex, sep) {
-    return [parentCursor, childIndex].join(sep)
-  }
-
-  const lenses = {
-    getLabel: tree => {
-      const { cursor, hash } = tree;
-      return hash[cursor]
-    },
-    getChildren: tree => {
-      const { cursor, hash } = tree;
-      let childIndex = 0;
-      let children = [];
-
-      while ( makeChildCursor(cursor, childIndex, sep) in hash ) {
-        children.push({ cursor: makeChildCursor(cursor, childIndex, '.'), hash })
-        childIndex++;
-      }
-
-      return children
-    },
-  };
+  const lenses = getHashedTreeLenses('.');
 
   const traverse = {
     seed: {},
@@ -502,42 +387,7 @@ QUnit.test("main case - hashed-tree traversal - traverse", function exec_test(as
 });
 
 QUnit.test("main case - hashed-tree traversal - map over", function exec_test(assert) {
-  const traces = [];
-  const sep = '.';
-
-  function makeChildCursor(parentCursor, childIndex, sep) {
-    return [parentCursor, childIndex].join(sep)
-  }
-
-  const lenses = {
-    getLabel: tree => {
-      const { cursor, hash } = tree;
-      return { label: hash[cursor], hash, cursor }
-    },
-    getChildren: tree => {
-      const { cursor, hash } = tree;
-      let childIndex = 0;
-      let children = [];
-
-      while ( makeChildCursor(cursor, childIndex, sep) in hash ) {
-        children.push({ cursor: makeChildCursor(cursor, childIndex, sep), hash })
-        childIndex++;
-      }
-
-      return children
-    },
-    constructTree: (label, children) => {
-      const { label: value, hash, cursor } = label;
-
-      return {
-        cursor: cursor,
-        hash: merge(
-          children.reduce((acc, child) => merge(acc, child.hash), {}),
-          { [cursor]: value }
-        )
-      }
-    },
-  };
+const lenses = getHashedTreeLenses('.');
 
   const hash = {
     "0": "root",
@@ -571,12 +421,6 @@ QUnit.test("main case - hashed-tree traversal - map over", function exec_test(as
     }
   ;
 
-  function mapOverHashTree(lenses, mapFn, obj) {
-    return mapOverTree(lenses, ({ label, hash, cursor }) => ({
-      label: mapFn(label), hash, cursor
-    }), obj);
-  }
-
   const actual = mapOverHashTree(lenses, label => 'M-' + label, obj);
   const expected = {
     "cursor": "0",
@@ -598,3 +442,5 @@ QUnit.test("main case - hashed-tree traversal - map over", function exec_test(as
   assert.deepEqual(actual, expected, `Works!`);
   assert.deepEqual(hash, hash_orig, `Works!`);
 });
+
+// TODO : publish new version of library

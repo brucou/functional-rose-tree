@@ -277,3 +277,99 @@ export function pruneWhen(lenses, predicate, tree) {
   return prunedTree
 }
 
+// Examples of lenses
+// HashedTreeLenses
+export function getHashedTreeLenses(sep){
+  function makeChildCursor(parentCursor, childIndex, sep) {
+    return [parentCursor, childIndex].join(sep)
+  }
+
+  return {
+    getLabel: tree => {
+      const { cursor, hash } = tree;
+      return { label: hash[cursor], hash, cursor }
+    },
+    getChildren: tree => {
+      const { cursor, hash } = tree;
+      let childIndex = 0;
+      let children = [];
+
+      while ( makeChildCursor(cursor, childIndex, sep) in hash ) {
+        children.push({ cursor: makeChildCursor(cursor, childIndex, sep), hash })
+        childIndex++;
+      }
+
+      return children
+    },
+    constructTree: (label, children) => {
+      const { label: value, hash, cursor } = label;
+
+      return {
+        cursor: cursor,
+        hash: merge(
+          children.reduce((acc, child) => merge(acc, child.hash), {}),
+          { [cursor]: value }
+        )
+      }
+    },
+  };
+}
+
+export function mapOverHashTree(lenses, mapFn, obj) {
+  return mapOverTree(lenses, ({ label, hash, cursor }) => ({
+    label: mapFn(label), hash, cursor
+  }), obj);
+}
+
+// Object as a tree
+export const ObjectTreeLenses = {
+  getLabel: tree => {
+    if (typeof tree === 'object' && !Array.isArray(tree) && Object.keys(tree).length === 1) {
+      return { key: Object.keys(tree)[0], value: Object.values(tree)[0] };
+    }
+    else {
+      throw `getLabel > unexpected tree value`
+    }
+  },
+  getChildren: tree => {
+    if (typeof tree === 'object' && !Array.isArray(tree) && Object.keys(tree).length === 1) {
+      let value = Object.values(tree)[0];
+      if (typeof value === 'object' && !Array.isArray(value)) {
+        return Object.keys(value).map(prop => ({ [prop]: value[prop] }))
+      }
+      else {
+        return []
+      }
+    }
+    else {
+      throw `getChildren > unexpected value`
+    }
+  },
+  constructTree: (label, children) => {
+    const childrenAcc = children.reduce((acc, child) => {
+      let key = Object.keys(child)[0];
+      acc[key] = child[key];
+      return acc
+    }, {});
+    return {
+      [label.key]: children.length === 0 ? label.value : childrenAcc
+    }
+  },
+  isLeafLabel: label => lenses.getChildren({ [label.key]: label.value }).length === 0
+};
+
+export function mapOverObj({ key: mapKeyfn, leafValue: mapValuefn }, obj) {
+  const rootKey = 'root';
+  const rootKeyMap = mapKeyfn(rootKey);
+
+  return mapOverTree(ObjectTreeLenses, ({ key, value }) => ({
+    key: mapKeyfn(key),
+    value: ObjectTreeLenses.isLeafLabel({ key, value }) && !isEmptyObject(value)
+      ? mapValuefn(value)
+      : value
+  }), { root: obj })[rootKeyMap];
+}
+
+function isEmptyObject(obj) {
+  return obj && Object.keys(obj).length === 0 && obj.constructor === Object
+}
