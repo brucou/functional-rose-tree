@@ -83,6 +83,9 @@ parcelRequire = (function (modules, cache, entry) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
 exports.visitTree = visitTree;
 exports.breadthFirstTraverseTree = breadthFirstTraverseTree;
 exports.preorderTraverseTree = preorderTraverseTree;
@@ -91,6 +94,9 @@ exports.reduceTree = reduceTree;
 exports.forEachInTree = forEachInTree;
 exports.mapOverTree = mapOverTree;
 exports.pruneWhen = pruneWhen;
+exports.getHashedTreeLenses = getHashedTreeLenses;
+exports.mapOverHashTree = mapOverHashTree;
+exports.mapOverObj = mapOverObj;
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
@@ -349,7 +355,7 @@ function forEachInTree(lenses, traverse, tree) {
  * Applies a function to every node of a tree, while keeping the tree structure. Note that the traversal strategy in
  * that case does not matter, as all nodes will be traversed anyway, and the function to apply is assumed to be a
  * pure function.
- * @param {{getChildren : function, setChildren : function, setLabel : function}} lenses
+ * @param {{getChildren : function, getLabel : function, constructTree: function}} lenses
  * @param {function} mapFn Function to apply to each node.
  * @param tree
  * @returns {*}
@@ -380,7 +386,7 @@ function mapOverTree(lenses, mapFn, tree) {
         return pathMap.get(stringify(path.concat(index)));
       }, getChildrenNumber(tree, traversalState));
       var mappedTree = constructTree(mappedLabel, mappedChildren);
-      debugger;
+
       pathMap.set(stringify(path), mappedTree);
 
       return pathMap;
@@ -422,6 +428,122 @@ function pruneWhen(lenses, predicate, tree) {
   }, tree);
 
   return prunedTree;
+}
+
+// Examples of lenses
+
+// HashedTreeLenses
+function getHashedTreeLenses(sep) {
+  function makeChildCursor(parentCursor, childIndex, sep) {
+    return [parentCursor, childIndex].join(sep);
+  }
+
+  return {
+    getLabel: function getLabel(tree) {
+      var cursor = tree.cursor,
+          hash = tree.hash;
+
+      return { label: hash[cursor], hash: hash, cursor: cursor };
+    },
+    getChildren: function getChildren(tree) {
+      var cursor = tree.cursor,
+          hash = tree.hash;
+
+      var childIndex = 0;
+      var children = [];
+
+      while (makeChildCursor(cursor, childIndex, sep) in hash) {
+        children.push({ cursor: makeChildCursor(cursor, childIndex, sep), hash: hash });
+        childIndex++;
+      }
+
+      return children;
+    },
+    constructTree: function constructTree(label, children) {
+      var value = label.label,
+          hash = label.hash,
+          cursor = label.cursor;
+
+
+      return {
+        cursor: cursor,
+        hash: merge(children.reduce(function (acc, child) {
+          return merge(acc, child.hash);
+        }, {}), _defineProperty({}, cursor, value))
+      };
+    }
+  };
+}
+
+function mapOverHashTree(sep, mapFn, obj) {
+  var lenses = getHashedTreeLenses(sep);
+
+  return mapOverTree(lenses, function (_ref) {
+    var label = _ref.label,
+        hash = _ref.hash,
+        cursor = _ref.cursor;
+    return {
+      label: mapFn(label), hash: hash, cursor: cursor
+    };
+  }, obj);
+}
+
+// Object as a tree
+var ObjectTreeLenses = exports.ObjectTreeLenses = {
+  getLabel: function getLabel(tree) {
+    if ((typeof tree === "undefined" ? "undefined" : _typeof(tree)) === 'object' && !Array.isArray(tree) && Object.keys(tree).length === 1) {
+      return { key: Object.keys(tree)[0], value: Object.values(tree)[0] };
+    } else {
+      throw "getLabel > unexpected tree value";
+    }
+  },
+  getChildren: function getChildren(tree) {
+    if ((typeof tree === "undefined" ? "undefined" : _typeof(tree)) === 'object' && !Array.isArray(tree) && Object.keys(tree).length === 1) {
+      var value = Object.values(tree)[0];
+      if ((typeof value === "undefined" ? "undefined" : _typeof(value)) === 'object' && !Array.isArray(value)) {
+        return Object.keys(value).map(function (prop) {
+          return _defineProperty({}, prop, value[prop]);
+        });
+      } else {
+        return [];
+      }
+    } else {
+      throw "getChildren > unexpected value";
+    }
+  },
+  constructTree: function constructTree(label, children) {
+    var childrenAcc = children.reduce(function (acc, child) {
+      var key = Object.keys(child)[0];
+      acc[key] = child[key];
+      return acc;
+    }, {});
+    return _defineProperty({}, label.key, children.length === 0 ? label.value : childrenAcc);
+  }
+};
+
+function mapOverObj(_ref4, obj) {
+  var mapKeyfn = _ref4.key,
+      mapValuefn = _ref4.leafValue;
+
+  var rootKey = 'root';
+  var rootKeyMap = mapKeyfn(rootKey);
+
+  return mapOverTree(ObjectTreeLenses, function (_ref5) {
+    var key = _ref5.key,
+        value = _ref5.value;
+    return {
+      key: mapKeyfn(key),
+      value: isLeafLabel({ key: key, value: value }) && !isEmptyObject(value) ? mapValuefn(value) : value
+    };
+  }, { root: obj })[rootKeyMap];
+}
+
+function isLeafLabel(label) {
+  return ObjectTreeLenses.getChildren(_defineProperty({}, label.key, label.value)).length === 0;
+}
+
+function isEmptyObject(obj) {
+  return obj && Object.keys(obj).length === 0 && obj.constructor === Object;
 }
 },{}]},{},[1])
 //# sourceMappingURL=/functional_rose_tree.map

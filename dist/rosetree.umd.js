@@ -222,7 +222,7 @@
    * Applies a function to every node of a tree, while keeping the tree structure. Note that the traversal strategy in
    * that case does not matter, as all nodes will be traversed anyway, and the function to apply is assumed to be a
    * pure function.
-   * @param {{getChildren : function, getLabel : function, constructTree: function (*, *)}} lenses
+   * @param {{getChildren : function, getLabel : function, constructTree: function}} lenses
    * @param {function} mapFn Function to apply to each node.
    * @param tree
    * @returns {*}
@@ -240,9 +240,10 @@
         const mappedChildren = times(
           index => pathMap.get(stringify(path.concat(index))), getChildrenNumber(tree, traversalState));
         const mappedTree = constructTree(mappedLabel, mappedChildren);
+
         pathMap.set(stringify(path), mappedTree);
 
-        return pathMap;
+          return pathMap;
       }
     };
     const pathMap = postOrderTraverseTree(lenses, treeTraveerse, tree);
@@ -282,6 +283,107 @@
     return prunedTree
   }
 
+  // Examples of lenses
+
+  // HashedTreeLenses
+  function getHashedTreeLenses(sep){
+    function makeChildCursor(parentCursor, childIndex, sep) {
+      return [parentCursor, childIndex].join(sep)
+    }
+
+    return {
+      getLabel: tree => {
+        const { cursor, hash } = tree;
+        return { label: hash[cursor], hash, cursor }
+      },
+      getChildren: tree => {
+        const { cursor, hash } = tree;
+        let childIndex = 0;
+        let children = [];
+
+        while ( makeChildCursor(cursor, childIndex, sep) in hash ) {
+          children.push({ cursor: makeChildCursor(cursor, childIndex, sep), hash });
+          childIndex++;
+        }
+
+        return children
+      },
+      constructTree: (label, children) => {
+        const { label: value, hash, cursor } = label;
+
+        return {
+          cursor: cursor,
+          hash: merge(
+            children.reduce((acc, child) => merge(acc, child.hash), {}),
+            { [cursor]: value }
+          )
+        }
+      },
+    };
+  }
+
+  function mapOverHashTree(sep, mapFn, obj) {
+    const lenses = getHashedTreeLenses(sep);
+
+    return mapOverTree(lenses, ({ label, hash, cursor }) => ({
+      label: mapFn(label), hash, cursor
+    }), obj);
+  }
+
+  // Object as a tree
+  const ObjectTreeLenses = {
+    getLabel: tree => {
+      if (typeof tree === 'object' && !Array.isArray(tree) && Object.keys(tree).length === 1) {
+        return { key: Object.keys(tree)[0], value: Object.values(tree)[0] };
+      }
+      else {
+        throw `getLabel > unexpected tree value`
+      }
+    },
+    getChildren: tree => {
+      if (typeof tree === 'object' && !Array.isArray(tree) && Object.keys(tree).length === 1) {
+        let value = Object.values(tree)[0];
+        if (typeof value === 'object' && !Array.isArray(value)) {
+          return Object.keys(value).map(prop => ({ [prop]: value[prop] }))
+        }
+        else {
+          return []
+        }
+      }
+      else {
+        throw `getChildren > unexpected value`
+      }
+    },
+    constructTree: (label, children) => {
+      const childrenAcc = children.reduce((acc, child) => {
+        let key = Object.keys(child)[0];
+        acc[key] = child[key];
+        return acc
+      }, {});
+      return {
+        [label.key]: children.length === 0 ? label.value : childrenAcc
+      }
+    },
+  };
+
+  function mapOverObj({ key: mapKeyfn, leafValue: mapValuefn }, obj) {
+    const rootKey = 'root';
+    const rootKeyMap = mapKeyfn(rootKey);
+
+    return mapOverTree(ObjectTreeLenses, ({ key, value }) => ({
+      key: mapKeyfn(key),
+      value: isLeafLabel({ key, value }) && !isEmptyObject(value)
+        ? mapValuefn(value)
+        : value
+    }), { root: obj })[rootKeyMap];
+  }
+
+  function isLeafLabel(label ){ return ObjectTreeLenses.getChildren({ [label.key]: label.value }).length === 0}
+
+  function isEmptyObject(obj) {
+    return obj && Object.keys(obj).length === 0 && obj.constructor === Object
+  }
+
   exports.POST_ORDER = POST_ORDER;
   exports.PRE_ORDER = PRE_ORDER;
   exports.BFS = BFS;
@@ -293,6 +395,10 @@
   exports.forEachInTree = forEachInTree;
   exports.mapOverTree = mapOverTree;
   exports.pruneWhen = pruneWhen;
+  exports.getHashedTreeLenses = getHashedTreeLenses;
+  exports.mapOverHashTree = mapOverHashTree;
+  exports.ObjectTreeLenses = ObjectTreeLenses;
+  exports.mapOverObj = mapOverObj;
 
   Object.defineProperty(exports, '__esModule', { value: true });
 
