@@ -278,6 +278,7 @@ export function pruneWhen(lenses, predicate, tree) {
 }
 
 // Examples of lenses
+
 // HashedTreeLenses
 export function getHashedTreeLenses(sep){
   function makeChildCursor(parentCursor, childIndex, sep) {
@@ -315,7 +316,9 @@ export function getHashedTreeLenses(sep){
   };
 }
 
-export function mapOverHashTree(lenses, mapFn, obj) {
+export function mapOverHashTree(sep, mapFn, obj) {
+  const lenses = getHashedTreeLenses(sep);
+
   return mapOverTree(lenses, ({ label, hash, cursor }) => ({
     label: mapFn(label), hash, cursor
   }), obj);

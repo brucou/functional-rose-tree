@@ -17,6 +17,8 @@ function addPrefix(prefix) {
   };
 }
 
+QUnit.dump.maxDepth = 10;
+
 const tree = {
   label: "root",
   children: [
@@ -290,11 +292,18 @@ QUnit.test("main case - object traversal - map over", function exec_test(assert)
 });
 
 QUnit.test("main case - object traversal - traverse", function exec_test(assert) {
-  const traces = [];
   const lenses = ObjectTreeLenses;
+  const traverse = {
+    seed: [],
+    visit: (result, traversalState, tree) => {
+      const label = lenses.getLabel(tree)
+      result.push({[label.key]: label.value});
 
+      return result;
+    }
+  };
   function traverseObj(lenses, traverse, obj) {
-    breadthFirstTraverseTree(lenses, traverse, { root: obj })
+    return breadthFirstTraverseTree(lenses, traverse, { root: obj })
   }
 
   const obj = {
@@ -320,27 +329,97 @@ QUnit.test("main case - object traversal - traverse", function exec_test(assert)
       ],
       "settings": {}
     }
-  ;
+  const actual = traverseObj(lenses, traverse, obj);
 
-  traverseObj(lenses, traverse, obj);
   const expected = [
-    "0: root",
-    "0,0: combinatorName",
-    "0,1: componentName",
-    "0,2: emits",
-    "0,3: id",
-    "0,4: logType",
-    "0,5: path",
-    "0,6: settings",
-    "0,2,0: identifier",
-    "0,2,1: notification",
-    "0,2,2: type",
-    "0,2,1,0: kind",
-    "0,2,1,1: value",
-    "0,2,1,1,0: key"
+    {
+      "root": {
+        "combinatorName": undefined,
+        "componentName": "sinkUpdatingComponent",
+        "emits": {
+          "identifier": "a_circular_behavior_source",
+          "notification": {
+            "kind": "N",
+            "value": {
+              "key": "value"
+            }
+          },
+          "type": 0
+        },
+        "id": 3,
+        "logType": "runtime",
+        "path": [
+          0,
+          0,
+          0,
+          2
+        ],
+        "settings": {}
+      }
+    },
+    {
+      "combinatorName": undefined
+    },
+    {
+      "componentName": "sinkUpdatingComponent"
+    },
+    {
+      "emits": {
+        "identifier": "a_circular_behavior_source",
+        "notification": {
+          "kind": "N",
+          "value": {
+            "key": "value"
+          }
+        },
+        "type": 0
+      }
+    },
+    {
+      "id": 3
+    },
+    {
+      "logType": "runtime"
+    },
+    {
+      "path": [
+        0,
+        0,
+        0,
+        2
+      ]
+    },
+    {
+      "settings": {}
+    },
+    {
+      "identifier": "a_circular_behavior_source"
+    },
+    {
+      "notification": {
+        "kind": "N",
+        "value": {
+          "key": "value"
+        }
+      }
+    },
+    {
+      "type": 0
+    },
+    {
+      "kind": "N"
+    },
+    {
+      "value": {
+        "key": "value"
+      }
+    },
+    {
+      "key": "value"
+    }
   ];
 
-  assert.deepEqual(traces, expected, `Works!`);
+  assert.deepEqual(actual, expected, `Works!`);
 });
 
 QUnit.test("main case - hashed-tree traversal - traverse", function exec_test(assert) {
@@ -348,14 +427,16 @@ QUnit.test("main case - hashed-tree traversal - traverse", function exec_test(as
   const lenses = getHashedTreeLenses('.');
 
   const traverse = {
-    seed: {},
-    visit: (visitAcc, traversalState, obj) => {
-      return traces.push(traversalState.get(obj).path + `: ${obj.hash[obj.cursor]}`)
+    seed: [],
+    visit: (result, traversalState, obj) => {
+      result.push(traversalState.get(obj).path + `: ${obj.hash[obj.cursor]}`);
+
+      return result
     }
   }
 
-  function traverseObj(lenses, traverse, obj) {
-    breadthFirstTraverseTree(lenses, traverse, obj)
+  function traverseHashedTree(lenses, traverse, obj) {
+    return breadthFirstTraverseTree(lenses, traverse, obj)
   }
 
   const hash = {
@@ -380,15 +461,28 @@ QUnit.test("main case - hashed-tree traversal - traverse", function exec_test(as
     }
   ;
 
-  traverseObj(lenses, traverse, obj);
-  const expected = [];
+  const actual = traverseHashedTree(lenses, traverse, obj);
+  const expected = [
+    "0: root",
+    "0,0: combinatorName",
+    "0,1: componentName",
+    "0,2: emits",
+    "0,3: id",
+    "0,4: logType",
+    "0,5: path",
+    "0,6: settings",
+    "0,2,0: identifier",
+    "0,2,1: notification",
+    "0,2,2: type",
+    "0,2,1,0: kind",
+    "0,2,1,1: value",
+    "0,2,1,1,0: key"
+  ];
 
-  assert.deepEqual(traces, expected, `Works!`);
+  assert.deepEqual(actual, expected, `Works!`);
 });
 
 QUnit.test("main case - hashed-tree traversal - map over", function exec_test(assert) {
-const lenses = getHashedTreeLenses('.');
-
   const hash = {
     "0": "root",
     "0.0": "combinatorName",
@@ -421,7 +515,7 @@ const lenses = getHashedTreeLenses('.');
     }
   ;
 
-  const actual = mapOverHashTree(lenses, label => 'M-' + label, obj);
+  const actual = mapOverHashTree('.', label => 'M-' + label, obj);
   const expected = {
     "cursor": "0",
     "hash": {
@@ -442,5 +536,3 @@ const lenses = getHashedTreeLenses('.');
   assert.deepEqual(actual, expected, `Works!`);
   assert.deepEqual(hash, hash_orig, `Works!`);
 });
-
-// TODO : publish new version of library
