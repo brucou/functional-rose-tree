@@ -24,14 +24,14 @@ we focus here on handling the data structure, and providing a few basic operatio
 Such libraries include, among the most interesting subjects, in order of interest :
 
 - [tree-morph](https://github.com/ngryman/tree-morph) : maintained, API features traversal only, 
-free tree format, tree is immutable, allows partial traversal (node skipping), iterative algorithms
+free tree format, tree is immutable, allows partial traversal (node skipping), iterative 
+algorithms, incomplete documentation
 - [tree-crawl](https://github.com/ngryman/tree-crawl) : maintained, API features traversal only, 
 free tree format, tree is mutable, claims to be optimized for performance!, nice API for skipping
- nodes or canceling a traversal, iterative algorithms
+ nodes or canceling a traversal, iterative algorithms, incomplete documentation
 - [tree-model](http://jnuno.com/tree-model-js/) : maintained and contributed to, imperative 
 object-based API, basic operations (traversal, find) together with utility functions (`isRoot`, 
-etc.) supporting the imperative portion of the API, recursive algorithms, nice [demo site]
-(http://jnuno.com/tree-model-js/)!
+etc.) supporting the imperative portion of the API, recursive algorithms, nice [demo site](http://jnuno.com/tree-model-js/)!
 - [arboreal](https://github.com/afiore/arboreal) : ancient, no longer maintained, imperative API, 
 imposed tree format, only basic operations
 - [t-js](https://github.com/aaronj1335/t-js) : ancient, no longer maintained, semi-functional 
@@ -481,6 +481,11 @@ QUnit.test("main case - mapOverTree", function exec_test(assert) {
 
 ```
 
+### Contracts
+- `mapFn` must be a pure function. In particular, `mapFn` receives the label (i.e. the structure 
+returned by `lenses.getLabel`), and canoot modify in-place this label. This ensures the 
+`mapOverTree` function is also pure.
+
 ## pruneWhen :: Lenses -> Predicate -> Tree -> Tree
 ### Description 
 Traverse a tree, applying a predicate, which when failed leads to discarding any descendant 
@@ -534,7 +539,7 @@ This is the generic tree traversal algorithm that all traversals use as their co
 
 - The tree is traversed starting from the root, 
 - for each traversed node its children are generating traversal tasks, 
-- a store in used to keep track of the pending traversal tasks to execute, 
+- a store is used to keep track of the pending traversal tasks to execute, 
 - each task involves the application of a visiting function which builds iteratively the result of
  the traversal, taking inputs from the traversal state, and the traversed node 
 - the traversal state includes flags (`isAdded`, `isVisited`) and relevant information (`path`) 
