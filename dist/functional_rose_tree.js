@@ -106,6 +106,7 @@ var PATH_ROOT = [0];
 var POST_ORDER = exports.POST_ORDER = "POST_ORDER";
 var PRE_ORDER = exports.PRE_ORDER = "PRE_ORDER";
 var BFS = exports.BFS = "BFS";
+var SEP = exports.SEP = ".";
 
 ///// Utility functions
 // Cheap cloning, which is enough for our needs : we only clone seeds and empty values, which are generally simple
@@ -177,7 +178,6 @@ function visitTree(traversalSpecs, tree) {
   var seed = typeof seedOrSeedConstructor === 'function' ? new (seedOrSeedConstructor())() : clone(seedOrSeedConstructor);
   var empty = typeof emptyOrEmptyConstructor === 'function' ? new (emptyOrEmptyConstructor())() : clone(emptyOrEmptyConstructor);
 
-  // necessary to avoid destructive updates on input parameters
   var currentStore = empty;
   var visitAcc = seed;
   add([tree], currentStore);
@@ -369,9 +369,9 @@ function mapOverTree(lenses, mapFn, tree) {
     return getChildren(tree, traversalState).length;
   };
   var stringify = function stringify(path) {
-    return path.join(".");
+    return path.join(SEP);
   };
-  var treeTraveerse = {
+  var treeTraverse = {
     seed: function seed() {
       return Map;
     },
@@ -392,7 +392,7 @@ function mapOverTree(lenses, mapFn, tree) {
       return pathMap;
     }
   };
-  var pathMap = postOrderTraverseTree(lenses, treeTraveerse, tree);
+  var pathMap = postOrderTraverseTree(lenses, treeTraverse, tree);
   var mappedTree = pathMap.get(stringify(PATH_ROOT));
   pathMap.clear();
 
@@ -545,5 +545,17 @@ function isLeafLabel(label) {
 function isEmptyObject(obj) {
   return obj && Object.keys(obj).length === 0 && obj.constructor === Object;
 }
+
+var arrayTreeLenses = exports.arrayTreeLenses = {
+  getLabel: function getLabel(tree) {
+    return Array.isArray(tree) ? tree[0] : tree;
+  },
+  getChildren: function getChildren(tree) {
+    return Array.isArray(tree) ? tree[1] : [];
+  },
+  constructTree: function constructTree(label, children) {
+    return children && Array.isArray(children) ? [label, children] : label;
+  }
+};
 },{}]},{},[1])
 //# sourceMappingURL=/functional_rose_tree.map
