@@ -2,6 +2,7 @@ const PATH_ROOT = [0];
 export const POST_ORDER = "POST_ORDER";
 export const PRE_ORDER = "PRE_ORDER";
 export const BFS = "BFS";
+export const SEP = ".";
 
 ///// Utility functions
 // Cheap cloning, which is enough for our needs : we only clone seeds and empty values, which are generally simple
@@ -224,8 +225,8 @@ export function forEachInTree(lenses, traverse, tree) {
 export function mapOverTree(lenses, mapFn, tree) {
   const { getChildren, constructTree, getLabel } = lenses;
   const getChildrenNumber = (tree, traversalState) => getChildren(tree, traversalState).length;
-  const stringify = path => path.join(".");
-  const treeTraveerse = {
+  const stringify = path => path.join(SEP);
+  const treeTraverse = {
     seed: () => Map,
     visit: (pathMap, traversalState, tree) => {
       const { path } = traversalState.get(tree);
@@ -240,13 +241,12 @@ export function mapOverTree(lenses, mapFn, tree) {
         return pathMap;
     }
   };
-  const pathMap = postOrderTraverseTree(lenses, treeTraveerse, tree);
+  const pathMap = postOrderTraverseTree(lenses, treeTraverse, tree);
   const mappedTree = pathMap.get(stringify(PATH_ROOT));
   pathMap.clear();
 
   return mappedTree;
 }
-
 
 /**
  * Returns a tree where all children of nodes which fails a predicate are pruned. Note that the node failing the
