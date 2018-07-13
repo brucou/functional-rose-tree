@@ -5,7 +5,7 @@ import {
   BFS, breadthFirstTraverseTree, forEachInTree, mapOverTree, POST_ORDER, postOrderTraverseTree, preorderTraverseTree,
   pruneWhen, reduceTree
 } from "../";
-import { getHashedTreeLenses, mapOverHashTree, mapOverObj, ObjectTreeLenses } from "../index"
+import { arrayTreeLenses, getHashedTreeLenses, mapOverHashTree, mapOverObj, ObjectTreeLenses } from "../index"
 
 function merge(objA, objB) {
   return Object.assign({}, objA, objB);
@@ -297,38 +297,39 @@ QUnit.test("main case - object traversal - traverse", function exec_test(assert)
     seed: [],
     visit: (result, traversalState, tree) => {
       const label = lenses.getLabel(tree)
-      result.push({[label.key]: label.value});
+      result.push({ [label.key]: label.value });
 
       return result;
     }
   };
+
   function traverseObj(lenses, traverse, obj) {
     return breadthFirstTraverseTree(lenses, traverse, { root: obj })
   }
 
   const obj = {
-      "combinatorName": undefined,
-      "componentName": "sinkUpdatingComponent",
-      "emits": {
-        "identifier": "a_circular_behavior_source",
-        "notification": {
-          "kind": "N",
-          "value": {
-            "key": "value"
-          }
-        },
-        "type": 0
+    "combinatorName": undefined,
+    "componentName": "sinkUpdatingComponent",
+    "emits": {
+      "identifier": "a_circular_behavior_source",
+      "notification": {
+        "kind": "N",
+        "value": {
+          "key": "value"
+        }
       },
-      "id": 3,
-      "logType": "runtime",
-      "path": [
-        0,
-        0,
-        0,
-        2
-      ],
-      "settings": {}
-    }
+      "type": 0
+    },
+    "id": 3,
+    "logType": "runtime",
+    "path": [
+      0,
+      0,
+      0,
+      2
+    ],
+    "settings": {}
+  }
   const actual = traverseObj(lenses, traverse, obj);
 
   const expected = [
@@ -536,3 +537,145 @@ QUnit.test("main case - hashed-tree traversal - map over", function exec_test(as
   assert.deepEqual(actual, expected, `Works!`);
   assert.deepEqual(hash, hash_orig, `Works!`);
 });
+
+QUnit.test("main case - array tree traversal - traverse", function exec_test(assert) {
+  const lenses = arrayTreeLenses;
+
+  const traverse = {
+    seed: [],
+    visit: (result, traversalState, tree) => {
+      const path = traversalState.get(tree).path;
+      const parentLabel = lenses.getLabel(tree);
+      const children = lenses.getChildren(tree);
+      const graphNodes = children.map(child => {
+        return {
+          data: {
+            id : [lenses.getLabel(child), path.join('.')].join('.'),
+            label : lenses.getLabel(child),
+            parent : parentLabel
+          }
+        }
+      });
+
+      return result.concat(graphNodes )
+    }
+  }
+
+  const arrayTree = ['root', [
+    ['no_cd_loaded', [
+      "cd_drawer_closed",
+      "cd_drawer_open",
+      "closing_cd_drawer"
+    ]],
+    ['cd_loaded', [
+      ["cd_loaded_group", [
+        ["cd_paused_group", [
+          "time_and_track_fields_not_blank",
+          "time_and_track_fields_blank"
+        ]],
+        "cd_playing",
+        "cd_stopped"
+      ]],
+      "stepping_forwards",
+      "stepping_backwards"
+    ]]
+  ]];
+
+  const actual = breadthFirstTraverseTree(lenses, traverse, arrayTree);
+  const expected = [
+    {
+      "data": {
+        "id": "no_cd_loaded.0",
+        "label": "no_cd_loaded",
+        "parent": "root"
+      }
+    },
+    {
+      "data": {
+        "id": "cd_loaded.0",
+        "label": "cd_loaded",
+        "parent": "root"
+      }
+    },
+    {
+      "data": {
+        "id": "cd_drawer_closed.0.0",
+        "label": "cd_drawer_closed",
+        "parent": "no_cd_loaded"
+      }
+    },
+    {
+      "data": {
+        "id": "cd_drawer_open.0.0",
+        "label": "cd_drawer_open",
+        "parent": "no_cd_loaded"
+      }
+    },
+    {
+      "data": {
+        "id": "closing_cd_drawer.0.0",
+        "label": "closing_cd_drawer",
+        "parent": "no_cd_loaded"
+      }
+    },
+    {
+      "data": {
+        "id": "cd_loaded_group.0.1",
+        "label": "cd_loaded_group",
+        "parent": "cd_loaded"
+      }
+    },
+    {
+      "data": {
+        "id": "stepping_forwards.0.1",
+        "label": "stepping_forwards",
+        "parent": "cd_loaded"
+      }
+    },
+    {
+      "data": {
+        "id": "stepping_backwards.0.1",
+        "label": "stepping_backwards",
+        "parent": "cd_loaded"
+      }
+    },
+    {
+      "data": {
+        "id": "cd_paused_group.0.1.0",
+        "label": "cd_paused_group",
+        "parent": "cd_loaded_group"
+      }
+    },
+    {
+      "data": {
+        "id": "cd_playing.0.1.0",
+        "label": "cd_playing",
+        "parent": "cd_loaded_group"
+      }
+    },
+    {
+      "data": {
+        "id": "cd_stopped.0.1.0",
+        "label": "cd_stopped",
+        "parent": "cd_loaded_group"
+      }
+    },
+    {
+      "data": {
+        "id": "time_and_track_fields_not_blank.0.1.0.0",
+        "label": "time_and_track_fields_not_blank",
+        "parent": "cd_paused_group"
+      }
+    },
+    {
+      "data": {
+        "id": "time_and_track_fields_blank.0.1.0.0",
+        "label": "time_and_track_fields_blank",
+        "parent": "cd_paused_group"
+      }
+    }
+  ];
+
+  assert.deepEqual(actual, expected, `Works!`);
+});
+

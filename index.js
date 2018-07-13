@@ -7,16 +7,16 @@ export const SEP = ".";
 ///// Utility functions
 // Cheap cloning, which is enough for our needs : we only clone seeds and empty values, which are generally simple
 // objects
-function clone(a){
+function clone(a) {
   return a === undefined ? undefined : JSON.parse(JSON.stringify(a))
 }
 
-function merge (objA, objB){
+function merge(objA, objB) {
   return Object.assign({}, objA, objB);
 }
 
-function times (fn, n){
-  return Array.apply(null, {length: n}).map(Number.call, Number).map(fn)
+function times(fn, n) {
+  return Array.apply(null, { length: n }).map(Number.call, Number).map(fn)
 }
 
 /**
@@ -62,16 +62,15 @@ function updateVisitInTraversalState(traversalState, tree) {
 ///// Core API
 export function visitTree(traversalSpecs, tree) {
   const { store, lenses, traverse } = traversalSpecs;
-  const { empty : emptyOrEmptyConstructor, add, takeAndRemoveOne, isEmpty } = store;
+  const { empty: emptyOrEmptyConstructor, add, takeAndRemoveOne, isEmpty } = store;
   const { getChildren, getLabel, setTree } = lenses;
-  const { visit, seed  : seedOrSeedConstructor} = traverse;
+  const { visit, seed: seedOrSeedConstructor } = traverse;
   const traversalState = new Map();
   // NOTE : This allows to have seeds which are non-JSON objects, such as new Map(). We force a new here to make
   // sure we have an object that cannot be modified out of the scope of visitTree and collaborators
-  const seed = (typeof seedOrSeedConstructor === 'function') ? new (seedOrSeedConstructor()) : clone(seedOrSeedConstructor) ;
-  const empty = (typeof emptyOrEmptyConstructor === 'function') ? new (emptyOrEmptyConstructor()) : clone(emptyOrEmptyConstructor) ;
+  const seed = (typeof seedOrSeedConstructor === 'function') ? new (seedOrSeedConstructor()) : clone(seedOrSeedConstructor);
+  const empty = (typeof emptyOrEmptyConstructor === 'function') ? new (emptyOrEmptyConstructor()) : clone(emptyOrEmptyConstructor);
 
-  // necessary to avoid destructive updates on input parameters
   let currentStore = empty;
   let visitAcc = seed;
   add([tree], currentStore);
@@ -238,7 +237,7 @@ export function mapOverTree(lenses, mapFn, tree) {
 
       pathMap.set(stringify(path), mappedTree);
 
-        return pathMap;
+      return pathMap;
     }
   };
   const pathMap = postOrderTraverseTree(lenses, treeTraverse, tree);
@@ -280,7 +279,7 @@ export function pruneWhen(lenses, predicate, tree) {
 // Examples of lenses
 
 // HashedTreeLenses
-export function getHashedTreeLenses(sep){
+export function getHashedTreeLenses(sep) {
   function makeChildCursor(parentCursor, childIndex, sep) {
     return [parentCursor, childIndex].join(sep)
   }
@@ -372,8 +371,20 @@ export function mapOverObj({ key: mapKeyfn, leafValue: mapValuefn }, obj) {
   }), { root: obj })[rootKeyMap];
 }
 
-function isLeafLabel(label ){ return ObjectTreeLenses.getChildren({ [label.key]: label.value }).length === 0}
+function isLeafLabel(label) { return ObjectTreeLenses.getChildren({ [label.key]: label.value }).length === 0}
 
 function isEmptyObject(obj) {
   return obj && Object.keys(obj).length === 0 && obj.constructor === Object
+}
+
+export const arrayTreeLenses = {
+  getLabel: tree => {
+    return Array.isArray(tree) ? tree[0] : tree
+  },
+  getChildren: tree => {
+    return Array.isArray(tree) ? tree[1] : []
+  },
+  constructTree: (label, children) => {
+    return children && Array.isArray(children) ? [label, children] : label
+  },
 }
