@@ -13,6 +13,7 @@
 - [Tests](#tests)
 - [Build](#build)
 - [Install](#install)
+- [Examples of lenses](#examples-of-lenses)
 
 # Motivation
 There is no shortage of libraries for manipulating trees in javascript. Because we seek to 
