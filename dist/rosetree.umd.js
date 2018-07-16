@@ -409,7 +409,7 @@
   exports.pruneWhen = pruneWhen;
   exports.getHashedTreeLenses = getHashedTreeLenses;
   exports.mapOverHashTree = mapOverHashTree;
-  exports.ObjectTreeLenses = ObjectTreeLenses;
+  exports.objectTreeLenses = ObjectTreeLenses;
   exports.mapOverObj = mapOverObj;
   exports.arrayTreeLenses = arrayTreeLenses;
 

@@ -5,7 +5,7 @@ import {
   BFS, breadthFirstTraverseTree, forEachInTree, mapOverTree, POST_ORDER, postOrderTraverseTree, preorderTraverseTree,
   pruneWhen, reduceTree
 } from "../";
-import { arrayTreeLenses, getHashedTreeLenses, mapOverHashTree, mapOverObj, ObjectTreeLenses } from "../index"
+import { arrayTreeLenses, getHashedTreeLenses, mapOverHashTree, mapOverObj, objectTreeLenses } from "../index"
 
 function merge(objA, objB) {
   return Object.assign({}, objA, objB);
@@ -292,7 +292,7 @@ QUnit.test("main case - object traversal - map over", function exec_test(assert)
 });
 
 QUnit.test("main case - object traversal - traverse", function exec_test(assert) {
-  const lenses = ObjectTreeLenses;
+  const lenses = objectTreeLenses;
   const traverse = {
     seed: [],
     visit: (result, traversalState, tree) => {
