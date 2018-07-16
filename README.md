@@ -66,7 +66,8 @@ should be handled by the library just as easily :
 - iterative traversal algorithms
 - basic operations available : bfs/dfs/post-order traversals, map/reduce/prune(~filter)/find 
 operations
-- advanced operations in a future version : find common ancestor, replace, zipper construction, optional : tree diff(hard), some, every (not so useful)
+- advanced operations in a future version : find common ancestor(would involve building a zipper), 
+replace, optional : tree diff(hard), some, every (not so useful), transducers (would be amazing)
 
 At the current state of the library, only the basic operations are implemented.
 
