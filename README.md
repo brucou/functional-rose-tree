@@ -760,3 +760,20 @@ The corresponding lenses would be as follows :
 ```
 
 Cf. tests for concrete examples. 
+
+## Array-stored trees
+Self-evident from the lenses definitions, a tree is `label || [label, children]` :
+
+```javascript
+export const arrayTreeLenses = {
+  getLabel: tree => {
+    return Array.isArray(tree) ? tree[0] : tree
+  },
+  getChildren: tree => {
+    return Array.isArray(tree) ? tree[1] : []
+  },
+  constructTree: (label, children) => {
+    return children && Array.isArray(children) ? [label, children] : label
+  },
+}
+```
