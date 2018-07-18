@@ -134,8 +134,10 @@ used easily to curry any relevant provided function.
 - `Lenses :: {{getLabel :: T -> E, getChildren :: T -> F, constructTree :: ExF -> T}}`
 - `State :: {{isAdded :: Boolean, isVisited :: Boolean, path :: Array<Number>, ...}}` (extensible
  record)
-- `TraversalState :: Map<T, State>`
-- `Reducer<A, T, TraversalState> :: A -> TraversalState -> T -> A`
+- `TraversalState :: HashMap<T, State>` (the hashmap exposes `get` and `set` methods to read and 
+update itself)
+- `Reducer<A, T, TraversalState> :: A -> TraversalState -> T -> A` (reducer may additionally 
+update the traversal state if necessary to implement a given traversal logic)
 - `TraverseSpecs :: {{strategy :: Optional<Traversal>, seed : A, visit :: Reducer<A, T, TraversalState> }}`
 
 Those types can be slightly modified depending on the specific function executed. The meaning of 

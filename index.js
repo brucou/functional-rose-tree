@@ -385,6 +385,6 @@ export const arrayTreeLenses = {
     return Array.isArray(tree) ? tree[1] : []
   },
   constructTree: (label, children) => {
-    return children && Array.isArray(children) ? [label, children] : label
+    return children && Array.isArray(children) && children.length > 0 ? [label, children] : label
   },
 }
