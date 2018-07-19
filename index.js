@@ -19,6 +19,8 @@ function times(fn, n) {
   return Array.apply(null, { length: n }).map(Number.call, Number).map(fn)
 }
 
+const stringify = path => path.join(SEP);
+
 /**
  *
  * @param {Map} traversalState
@@ -387,4 +389,28 @@ export const arrayTreeLenses = {
   constructTree: (label, children) => {
     return children && Array.isArray(children) && children.length > 0 ? [label, children] : label
   },
+}
+
+export function switchTreeDataStructure(originLenses, targetLenses, tree) {
+  const { getLabel, getChildren } = originLenses;
+  const { constructTree } = targetLenses;
+  const getChildrenNumber = (tree, traversalState) => getChildren(tree, traversalState).length;
+
+  const traverse = {
+    seed: () => Map,
+    visit: (pathMap, traversalState, tree) => {
+      const { path } = traversalState.get(tree);
+      const label = getLabel(tree);
+      const children = times(
+        index => pathMap.get(stringify(path.concat(index))),
+        getChildrenNumber(tree, traversalState)
+      );
+      pathMap.set(stringify(path), constructTree(label, children));
+
+      return pathMap;
+    }
+  };
+
+  const newTreeStruct= postOrderTraverseTree(originLenses, traverse, tree);
+  return newTreeStruct.get(stringify(PATH_ROOT));
 }

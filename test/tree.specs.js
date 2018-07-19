@@ -5,7 +5,9 @@ import {
   BFS, breadthFirstTraverseTree, forEachInTree, mapOverTree, POST_ORDER, postOrderTraverseTree, preorderTraverseTree,
   pruneWhen, reduceTree
 } from "../";
-import { arrayTreeLenses, getHashedTreeLenses, mapOverHashTree, mapOverObj, objectTreeLenses } from "../index"
+import {
+  arrayTreeLenses, getHashedTreeLenses, mapOverHashTree, mapOverObj, objectTreeLenses, switchTreeDataStructure
+} from "../index"
 
 function merge(objA, objB) {
   return Object.assign({}, objA, objB);
@@ -31,12 +33,13 @@ const tree = {
   ]
 };
 const lenses = {
+  getLabel: tree => tree.label,
   getChildren: tree => tree.children || []
 };
 const traverse = {
   seed: [],
   visit: (result, traversalState, tree) => {
-    result.push(tree.label);
+    result.push(lenses.getLabel(tree));
     return result;
   }
 };
@@ -675,6 +678,35 @@ QUnit.test("main case - array tree traversal - traverse", function exec_test(ass
       }
     }
   ];
+
+  assert.deepEqual(actual, expected, `Works!`);
+});
+
+QUnit.test("main case - switching tree data structure - from label tree to array tree", function exec_test(assert) {
+  const actual = switchTreeDataStructure(lenses, arrayTreeLenses, tree);
+
+  const expected = [
+    "root",
+    [
+      "left",
+      [
+        "middle",
+        [
+          "midleft",
+          "midright"
+        ]
+      ],
+      "right"
+    ]
+  ];
+
+  assert.deepEqual(actual, expected, `Works!`);
+});
+
+QUnit.test("main case - switching tree data structure - from label tree to object tree", function exec_test(assert) {
+  const actual = switchTreeDataStructure(lenses, objectTreeLenses, tree);
+
+  const expected = [];
 
   assert.deepEqual(actual, expected, `Works!`);
 });
