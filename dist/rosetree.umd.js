@@ -143,7 +143,7 @@
       getChildren: (traversalState, tree) =>
         predicate(tree, traversalState)
           ? []
-          : getChildren(tree, traversalState).concat(tree)
+          : getChildren(tree, traversalState).concat([tree])
     };
     const traversalSpecs = {
       store: {

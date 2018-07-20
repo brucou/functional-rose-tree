@@ -10,6 +10,7 @@
   * [mapOverTree :: Lenses -> MapFn -> Tree -> Tree'](#mapovertree----lenses----mapfn----tree----tree-)
   * [pruneWhen :: Lenses -> Predicate -> Tree -> Tree](#prunewhen----lenses----predicate----tree----tree)
   * [visitTree :: ExtendedTraversalSpecs -> Tree -> A](#visittree----extendedtraversalspecs----tree----a)
+  * [switchTreeDataStructure :: Lenses -> Lenses -> Tree](#visittree----extendedtraversalspecs----tree----a)
 - [Tests](#tests)
 - [Build](#build)
 - [Install](#install)
@@ -642,6 +643,59 @@ export function postOrderTraverseTree(lenses, traverse, tree) {
 }
 ```
 
+## switchTreeDataStructure :: Lenses -> Lenses -> Tree
+### Description
+Allows to convert between concrete tree data structures. Note that for the conversion to be 
+possible, the lenses must be very well behaved. It is for instance not always possible to convert
+ to an object tree data structure.
+
+### Types
+The types have been introduced previously. 
+
+### Other contracts
+Good behaviour of the lenses. If you are unsure of your lenses behaviour, try out a few conversions.
+If it works for a non-trivial tree, then it will always work.   
+
+### Examples
+Cf. tests. 
+
+For instance, this tree :
+
+```javascript
+const tree = {
+  label: "root",
+  children: [
+    { label: "left" },
+    {
+      label: "middle",
+      children: [{ label: "midleft" }, { label: "midright" }]
+    },
+    { label: "right" }
+  ]
+};
+```
+
+becomes this equivalent tree :
+
+```javascript
+[
+    "root",
+    [
+      "left",
+      [
+        "middle",
+        [
+          "midleft",
+          "midright"
+        ]
+      ],
+      "right"
+    ]
+  ]
+``` 
+
+It is however impossible to convert any of those tree data structure towards an object tree.
+
 # Tests
 - `npm run test`
 
@@ -654,7 +708,7 @@ export function postOrderTraverseTree(lenses, traverse, tree) {
 
 # Examples of lenses
 ## Object traversal
-An object can be traversed with the following lenses : 
+An object can be traversed and mapped over with the following lenses : 
 
 ```javascript
   const lenses = {
@@ -779,3 +833,9 @@ export const arrayTreeLenses = {
   },
 }
 ```
+
+# Conversion
+
+# Gotchas
+could be issues when a tree is not an object but a primitive... Because we use a map with tree as
+ a key. It is possible that two different leaves being primitives would telescope... 

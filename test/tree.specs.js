@@ -34,7 +34,8 @@ const tree = {
 };
 const lenses = {
   getLabel: tree => tree.label,
-  getChildren: tree => tree.children || []
+  getChildren: tree => tree.children || [],
+  constructTree : (label, children) => ({label, children})
 };
 const traverse = {
   seed: [],
@@ -703,11 +704,149 @@ QUnit.test("main case - switching tree data structure - from label tree to array
   assert.deepEqual(actual, expected, `Works!`);
 });
 
-QUnit.test("main case - switching tree data structure - from label tree to object tree", function exec_test(assert) {
-  const actual = switchTreeDataStructure(lenses, objectTreeLenses, tree);
+QUnit.test("main case - array tree traversal - postorder traversal", function exec_test(assert) {
+  const lenses = arrayTreeLenses;
 
-  const expected = [];
+  const traverse = {
+    seed: [],
+    visit: (result, traversalState, tree) => {
+      const path = traversalState.get(tree).path;
+      const label = lenses.getLabel(tree);
+      const children = lenses.getChildren(tree);
+
+      return result.concat({path, label, children})
+    }
+  }
+
+  const arrayTree = [
+    "root",
+    [
+      "left",
+      [
+        "middle",
+        [
+          "midleft",
+          "midright"
+        ]
+      ],
+      "right"
+    ]
+  ];
+
+  const actual = postOrderTraverseTree(lenses, traverse, arrayTree);
+  const expected =
+    [
+      {
+        "children": [],
+        "label": "left",
+        "path": [
+          0,
+          0
+        ]
+      },
+      {
+        "children": [],
+        "label": "midleft",
+        "path": [
+          0,
+          1,
+          0
+        ]
+      },
+      {
+        "children": [],
+        "label": "midright",
+        "path": [
+          0,
+          1,
+          1
+        ]
+      },
+      {
+        "children": [
+          "midleft",
+          "midright"
+        ],
+        "label": "middle",
+        "path": [
+          0,
+          1
+        ]
+      },
+      {
+        "children": [],
+        "label": "right",
+        "path": [
+          0,
+          2
+        ]
+      },
+      {
+        "children": [
+          "left",
+          [
+            "middle",
+            [
+              "midleft",
+              "midright"
+            ]
+          ],
+          "right"
+        ],
+        "label": "root",
+        "path": [
+          0
+        ]
+      }
+    ];
 
   assert.deepEqual(actual, expected, `Works!`);
 });
 
+QUnit.test("main case - switching tree data structure - from array tree to label tree", function exec_test(assert) {
+  const tree = [
+    "root",
+    [
+      "left",
+      [
+        "middle",
+        [
+          "midleft",
+          "midright"
+        ]
+      ],
+      "right"
+    ]
+  ];
+  const actual = switchTreeDataStructure(arrayTreeLenses, lenses, tree);
+
+  const expected =
+    {
+      "children": [
+        {
+          "children": [],
+          "label": "left"
+        },
+        {
+          "children": [
+            {
+              "children": [],
+              "label": "midleft"
+            },
+            {
+              "children": [],
+              "label": "midright"
+            }
+          ],
+          "label": "middle"
+        },
+        {
+          "children": [],
+          "label": "right"
+        }
+      ],
+      "label": "root"
+    };
+
+  assert.deepEqual(actual, expected, `Works!`);
+});
