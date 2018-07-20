@@ -851,7 +851,9 @@ QUnit.test("main case - switching tree data structure - from array tree to label
   assert.deepEqual(actual, expected, `Works!`);
 });
 
-QUnit.test("main case - preorderTraverseTree - identical labels", function exec_test(assert) {
+QUnit.module("Edge cases - identiical values", {});
+
+QUnit.test("main case - preorderTraverseTree - label tree - identical labels", function exec_test(assert) {
   const tree =  {
     label: "root",
     children: [
@@ -877,7 +879,7 @@ QUnit.test("main case - preorderTraverseTree - identical labels", function exec_
   assert.deepEqual(actual, expected, `Works!`);
 });
 
-QUnit.test("main case - postorderTraverseTree - identical labels", function exec_test(assert) {
+QUnit.test("main case - postorderTraverseTree - label tree - identical labels", function exec_test(assert) {
   const tree =  {
     label: "root",
     children: [
@@ -903,7 +905,7 @@ QUnit.test("main case - postorderTraverseTree - identical labels", function exec
   assert.deepEqual(actual, expected, `Works!`);
 });
 
-QUnit.test("main case - bfsOrderTraverseTree - identical labels", function exec_test(assert) {
+QUnit.test("main case - bfsOrderTraverseTree - label tree - identical labels", function exec_test(assert) {
   const tree =  {
     label: "root",
     children: [
@@ -924,6 +926,288 @@ QUnit.test("main case - bfsOrderTraverseTree - identical labels", function exec_
     "same",
     "midleft",
     "midright"
+  ];
+
+  assert.deepEqual(actual, expected, `Works!`);
+});
+
+QUnit.test("main case - preorder array tree traversal - traverse - identical labels", function exec_test(assert) {
+  const lenses = arrayTreeLenses;
+
+  const traverse = {
+    seed: [],
+    visit: (result, traversalState, tree) => {
+      const path = traversalState.get(tree).path;
+      const parentLabel = lenses.getLabel(tree);
+      const children = lenses.getChildren(tree);
+      const graphNodes = children.map(child => {
+        return {
+          data: {
+            id : [lenses.getLabel(child), path.join('.')].join('.'),
+            label : lenses.getLabel(child),
+            parent : parentLabel
+          }
+        }
+      });
+
+      return result.concat(graphNodes )
+    }
+  }
+
+  const arrayTree = ['root', [
+    ['no_cd_loaded', [
+      "cd_drawer_closed",
+      "cd_drawer_closed",
+      "cd_drawer_closed"
+    ]],
+    ['cd_loaded', [
+      ["cd_loaded_group", [
+        ["cd_paused_group", [
+          "time_and_track_fields_not_blank",
+          "time_and_track_fields_blank"
+        ]],
+        "cd_playing",
+        "cd_stopped"
+      ]],
+      "stepping_forwards",
+      "stepping_backwards"
+    ]]
+  ]];
+
+  const actual = breadthFirstTraverseTree(lenses, traverse, arrayTree);
+  const expected = [
+    {
+      "data": {
+        "id": "no_cd_loaded.0",
+        "label": "no_cd_loaded",
+        "parent": "root"
+      }
+    },
+    {
+      "data": {
+        "id": "cd_loaded.0",
+        "label": "cd_loaded",
+        "parent": "root"
+      }
+    },
+    {
+      "data": {
+        "id": "cd_drawer_closed.0.0",
+        "label": "cd_drawer_closed",
+        "parent": "no_cd_loaded"
+      }
+    },
+    {
+      "data": {
+        "id": "cd_drawer_closed.0.0",
+        "label": "cd_drawer_closed",
+        "parent": "no_cd_loaded"
+      }
+    },
+    {
+      "data": {
+        "id": "cd_drawer_closed.0.0",
+        "label": "cd_drawer_closed",
+        "parent": "no_cd_loaded"
+      }
+    },
+    {
+      "data": {
+        "id": "cd_loaded_group.0.1",
+        "label": "cd_loaded_group",
+        "parent": "cd_loaded"
+      }
+    },
+    {
+      "data": {
+        "id": "stepping_forwards.0.1",
+        "label": "stepping_forwards",
+        "parent": "cd_loaded"
+      }
+    },
+    {
+      "data": {
+        "id": "stepping_backwards.0.1",
+        "label": "stepping_backwards",
+        "parent": "cd_loaded"
+      }
+    },
+    {
+      "data": {
+        "id": "cd_paused_group.0.1.0",
+        "label": "cd_paused_group",
+        "parent": "cd_loaded_group"
+      }
+    },
+    {
+      "data": {
+        "id": "cd_playing.0.1.0",
+        "label": "cd_playing",
+        "parent": "cd_loaded_group"
+      }
+    },
+    {
+      "data": {
+        "id": "cd_stopped.0.1.0",
+        "label": "cd_stopped",
+        "parent": "cd_loaded_group"
+      }
+    },
+    {
+      "data": {
+        "id": "time_and_track_fields_not_blank.0.1.0.0",
+        "label": "time_and_track_fields_not_blank",
+        "parent": "cd_paused_group"
+      }
+    },
+    {
+      "data": {
+        "id": "time_and_track_fields_blank.0.1.0.0",
+        "label": "time_and_track_fields_blank",
+        "parent": "cd_paused_group"
+      }
+    }
+  ];
+
+  assert.deepEqual(actual, expected, `Works!`);
+});
+
+QUnit.test("main case - postorder tree traversal - traverse - identical labels", function exec_test(assert) {
+  const lenses = arrayTreeLenses;
+
+  const traverse = {
+    seed: [],
+    visit: (result, traversalState, tree) => {
+      const path = traversalState.get(tree).path;
+      const parentLabel = lenses.getLabel(tree);
+      const children = lenses.getChildren(tree);
+      const graphNodes = children.map(child => {
+        return {
+          data: {
+            id : [lenses.getLabel(child), path.join('.')].join('.'),
+            label : lenses.getLabel(child),
+            parent : parentLabel
+          }
+        }
+      });
+
+      return result.concat(graphNodes )
+    }
+  }
+
+  const arrayTree = ['root', [
+    ['no_cd_loaded', [
+      "cd_drawer_closed",
+      "cd_drawer_closed",
+      "cd_drawer_closed"
+    ]],
+    ['cd_drawer_closed', [
+      ["cd_loaded_group", [
+        ["cd_paused_group", [
+          "time_and_track_fields_not_blank",
+          "time_and_track_fields_blank"
+        ]],
+        "cd_playing",
+        "cd_stopped"
+      ]],
+      "stepping_forwards",
+      "stepping_backwards"
+    ]]
+  ]];
+
+  const actual = postOrderTraverseTree(lenses, traverse, arrayTree);
+  const expected = [
+    {
+      "data": {
+        "id": "cd_drawer_closed.0.0",
+        "label": "cd_drawer_closed",
+        "parent": "no_cd_loaded"
+      }
+    },
+    {
+      "data": {
+        "id": "cd_drawer_closed.0.0",
+        "label": "cd_drawer_closed",
+        "parent": "no_cd_loaded"
+      }
+    },
+    {
+      "data": {
+        "id": "cd_drawer_closed.0.0",
+        "label": "cd_drawer_closed",
+        "parent": "no_cd_loaded"
+      }
+    },
+    {
+      "data": {
+        "id": "time_and_track_fields_not_blank.0.1.0.0",
+        "label": "time_and_track_fields_not_blank",
+        "parent": "cd_paused_group"
+      }
+    },
+    {
+      "data": {
+        "id": "time_and_track_fields_blank.0.1.0.0",
+        "label": "time_and_track_fields_blank",
+        "parent": "cd_paused_group"
+      }
+    },
+    {
+      "data": {
+        "id": "cd_paused_group.0.1.0",
+        "label": "cd_paused_group",
+        "parent": "cd_loaded_group"
+      }
+    },
+    {
+      "data": {
+        "id": "cd_playing.0.1.0",
+        "label": "cd_playing",
+        "parent": "cd_loaded_group"
+      }
+    },
+    {
+      "data": {
+        "id": "cd_stopped.0.1.0",
+        "label": "cd_stopped",
+        "parent": "cd_loaded_group"
+      }
+    },
+    {
+      "data": {
+        "id": "cd_loaded_group.0.1",
+        "label": "cd_loaded_group",
+        "parent": "cd_drawer_closed"
+      }
+    },
+    {
+      "data": {
+        "id": "stepping_forwards.0.1",
+        "label": "stepping_forwards",
+        "parent": "cd_drawer_closed"
+      }
+    },
+    {
+      "data": {
+        "id": "stepping_backwards.0.1",
+        "label": "stepping_backwards",
+        "parent": "cd_drawer_closed"
+      }
+    },
+    {
+      "data": {
+        "id": "no_cd_loaded.0",
+        "label": "no_cd_loaded",
+        "parent": "root"
+      }
+    },
+    {
+      "data": {
+        "id": "cd_drawer_closed.0",
+        "label": "cd_drawer_closed",
+        "parent": "root"
+      }
+    }
   ];
 
   assert.deepEqual(actual, expected, `Works!`);

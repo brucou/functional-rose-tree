@@ -160,9 +160,9 @@ const tree2 = {label : ..., children : [tree1, tree1]}
 
 While `tree2` is a well-formed tree, our library will bug in that case, for reasons due to our 
 specific implementation (nodes are used as keys to keep the traversal state, and keys must be 
-unique).
-
-See also possible gotchas (untested for now).
+unique). It gets really tricky if your tree somehow can be a javascript primitive, in which case,
+ this contract would mean that all such primitives should have a different value! Tests so far 
+ seems to show that 'normal' tree structures do not have this primitive-value-duplication problem.
 
 # API
 ## breadthFirstTraverseTree :: Lenses -> TraverseSpecs -> Tree -> A
