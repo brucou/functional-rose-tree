@@ -348,7 +348,8 @@ export const objectTreeLenses = {
     }
   },
   constructTree: (label, children) => {
-    const labelKey = Object.keys(label)[0];
+    const labelKey = label && Object.keys(label) && Object.keys(label)[0];
+
     return children.length === 0
       ? label
       : {

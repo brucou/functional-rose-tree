@@ -162,6 +162,8 @@ While `tree2` is a well-formed tree, our library will bug in that case, for reas
 specific implementation (nodes are used as keys to keep the traversal state, and keys must be 
 unique).
 
+See also possible gotchas (untested for now).
+
 # API
 ## breadthFirstTraverseTree :: Lenses -> TraverseSpecs -> Tree -> A
 ### Description
@@ -711,41 +713,38 @@ It is however impossible to convert any of those tree data structure towards an 
 An object can be traversed and mapped over with the following lenses : 
 
 ```javascript
-  const lenses = {
-    getLabel: tree => {
-      if (typeof tree === 'object' && !Array.isArray(tree) && Object.keys(tree).length === 1) {
-        return { key: Object.keys(tree)[0], value: Object.values(tree)[0] };
+export const objectTreeLenses = {
+  getLabel: tree => {
+    if (typeof tree === 'object' && !Array.isArray(tree) && Object.keys(tree).length === 1) {
+      return tree;
+    }
+    else {
+      throw `getLabel > unexpected object tree value`
+    }
+  },
+  getChildren: tree => {
+    if (typeof tree === 'object' && !Array.isArray(tree) && Object.keys(tree).length === 1) {
+      let value = Object.values(tree)[0];
+      if (typeof value === 'object' && !Array.isArray(value)) {
+        return Object.keys(value).map(prop => ({ [prop]: value[prop] }))
       }
       else {
-        throw `getLabel > unexpected tree value`
+        return []
       }
-    },
-    getChildren: tree => {
-      if (typeof tree === 'object' && !Array.isArray(tree) && Object.keys(tree).length === 1) {
-        let value = Object.values(tree)[0];
-        if (typeof value === 'object' && !Array.isArray(value)) {
-          return Object.keys(value).map(prop => ({ [prop]: value[prop] }))
-        }
-        else {
-          return []
-        }
-      }
-      else {
-        throw `getChildren > unexpected value`
-      }
-    },
-    constructTree: (label, children) => {
-      const childrenAcc = children.reduce((acc, child) => {
-        let key = Object.keys(child)[0];
-        acc[key] = child[key];
-        return acc
-      }, {});
-      return {
-        [label.key]: children.length === 0 ? label.value : childrenAcc
-      }
-    },
-    isLeafLabel : label => lenses.getChildren({[label.key]:label.value}).length === 0
-  };
+    }
+    else {
+      throw `getChildren > unexpected value`
+    }
+  },
+  constructTree: (label, children) => {
+    const labelKey = Object.keys(label)[0];
+    return children.length === 0
+      ? label
+      : {
+      [labelKey]: Object.assign.apply(null, children)
+    }
+  },
+};
 ```
 
 Cf. tests for examples with mapping over object keys and properties and traversing objects. 

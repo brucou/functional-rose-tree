@@ -850,3 +850,81 @@ QUnit.test("main case - switching tree data structure - from array tree to label
 
   assert.deepEqual(actual, expected, `Works!`);
 });
+
+QUnit.test("main case - preorderTraverseTree - identical labels", function exec_test(assert) {
+  const tree =  {
+    label: "root",
+    children: [
+      { label: "same" },
+      {
+        label: "same",
+        children: [{ label: "midleft" }, { label: "midright" }]
+      },
+      { label: "same" }
+    ]
+  };
+
+  const actual = preorderTraverseTree(lenses, traverse, tree);
+  const expected = [
+    "root",
+    "same",
+    "same",
+    "midleft",
+    "midright",
+    "same"
+  ];
+
+  assert.deepEqual(actual, expected, `Works!`);
+});
+
+QUnit.test("main case - postorderTraverseTree - identical labels", function exec_test(assert) {
+  const tree =  {
+    label: "root",
+    children: [
+      { label: "same" },
+      {
+        label: "same",
+        children: [{ label: "midleft" }, { label: "midright" }]
+      },
+      { label: "same" }
+    ]
+  };
+
+  const actual = postOrderTraverseTree(lenses, traverse, tree);
+  const expected = [
+    "same",
+    "midleft",
+    "midright",
+    "same",
+    "same",
+    "root"
+  ];
+
+  assert.deepEqual(actual, expected, `Works!`);
+});
+
+QUnit.test("main case - bfsOrderTraverseTree - identical labels", function exec_test(assert) {
+  const tree =  {
+    label: "root",
+    children: [
+      { label: "same" },
+      {
+        label: "same",
+        children: [{ label: "midleft" }, { label: "midright" }]
+      },
+      { label: "same" }
+    ]
+  };
+
+  const actual = breadthFirstTraverseTree(lenses, traverse, tree);
+  const expected = [
+    "root",
+    "same",
+    "same",
+    "same",
+    "midleft",
+    "midright"
+  ];
+
+  assert.deepEqual(actual, expected, `Works!`);
+});
