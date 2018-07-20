@@ -299,8 +299,8 @@ QUnit.test("main case - object traversal - traverse", function exec_test(assert)
   const traverse = {
     seed: [],
     visit: (result, traversalState, tree) => {
-      const label = lenses.getLabel(tree)
-      result.push({ [label.key]: label.value });
+      const label = lenses.getLabel(tree);
+      result.push(label);
 
       return result;
     }

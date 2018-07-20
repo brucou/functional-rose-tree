@@ -329,10 +329,10 @@ export function mapOverHashTree(sep, mapFn, obj) {
 export const objectTreeLenses = {
   getLabel: tree => {
     if (typeof tree === 'object' && !Array.isArray(tree) && Object.keys(tree).length === 1) {
-      return { key: Object.keys(tree)[0], value: Object.values(tree)[0] };
+      return tree;
     }
     else {
-      throw `getLabel > unexpected tree value`
+      throw `getLabel > unexpected object tree value`
     }
   },
   getChildren: tree => {
@@ -355,8 +355,10 @@ export const objectTreeLenses = {
       acc[key] = child[key];
       return acc
     }, {});
+    const labelKey = Object.keys(label)[0];
+    const labelValue = label[labelKey];
     return {
-      [label.key]: children.length === 0 ? label.value : childrenAcc
+      [labelKey]: children.length === 0 ? labelValue : childrenAcc
     }
   },
 };
@@ -365,12 +367,16 @@ export function mapOverObj({ key: mapKeyfn, leafValue: mapValuefn }, obj) {
   const rootKey = 'root';
   const rootKeyMap = mapKeyfn(rootKey);
 
-  return mapOverTree(objectTreeLenses, ({ key, value }) => ({
-    key: mapKeyfn(key),
-    value: isLeafLabel({ key, value }) && !isEmptyObject(value)
-      ? mapValuefn(value)
-      : value
-  }), { root: obj })[rootKeyMap];
+  return mapOverTree(objectTreeLenses, (tree) => {
+    const key = Object.keys(tree)[0];
+    const value = tree[key];
+
+    return {
+      [mapKeyfn(key)]: isLeafLabel(objectTreeLenses.getLabel(tree)) && !isEmptyObject(value)
+        ? mapValuefn(value)
+        : value
+    }
+  }, { root: obj })[rootKeyMap];
 }
 
 function isLeafLabel(label) { return objectTreeLenses.getChildren({ [label.key]: label.value }).length === 0}
@@ -411,6 +417,6 @@ export function switchTreeDataStructure(originLenses, targetLenses, tree) {
     }
   };
 
-  const newTreeStruct= postOrderTraverseTree(originLenses, traverse, tree);
+  const newTreeStruct = postOrderTraverseTree(originLenses, traverse, tree);
   return newTreeStruct.get(stringify(PATH_ROOT));
 }
