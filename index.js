@@ -382,6 +382,7 @@ function isEmptyObject(obj) {
   return obj && Object.keys(obj).length === 0 && obj.constructor === Object
 }
 
+// Arrays as trees
 export const arrayTreeLenses = {
   getLabel: tree => {
     return Array.isArray(tree) ? tree[0] : tree
@@ -394,6 +395,7 @@ export const arrayTreeLenses = {
   },
 }
 
+// Conversion
 export function switchTreeDataStructure(originLenses, targetLenses, tree) {
   const { getLabel, getChildren } = originLenses;
   const { constructTree } = targetLenses;
