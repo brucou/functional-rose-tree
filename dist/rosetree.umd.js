@@ -25,6 +25,8 @@
     return Array.apply(null, { length: n }).map(Number.call, Number).map(fn)
   }
 
+  const stringify = path => path.join(SEP);
+
   /**
    *
    * @param {Map} traversalState
@@ -69,7 +71,7 @@
   function visitTree(traversalSpecs, tree) {
     const { store, lenses, traverse } = traversalSpecs;
     const { empty: emptyOrEmptyConstructor, add, takeAndRemoveOne, isEmpty } = store;
-    const { getChildren, getLabel, setTree } = lenses;
+    const { getChildren } = lenses;
     const { visit, seed: seedOrSeedConstructor } = traverse;
     const traversalState = new Map();
     // NOTE : This allows to have seeds which are non-JSON objects, such as new Map(). We force a new here to make
@@ -160,11 +162,9 @@
           // 1. label has been visited already : visit
           // 2. label has not been visited, and there are no children : visit
           // 3. label has not been visited, and there are children : don't visit, will do it later
-          if (predicate(tree, traversalState)) {
-            visit(result, traversalState, tree);
-          }
-
-          return result;
+          return predicate(tree, traversalState)
+          ? visit(result, traversalState, tree)
+            : result
         }
       }
     };
@@ -330,13 +330,13 @@
   }
 
   // Object as a tree
-  const ObjectTreeLenses = {
+  const objectTreeLenses = {
     getLabel: tree => {
       if (typeof tree === 'object' && !Array.isArray(tree) && Object.keys(tree).length === 1) {
-        return { key: Object.keys(tree)[0], value: Object.values(tree)[0] };
+        return tree;
       }
       else {
-        throw `getLabel > unexpected tree value`
+        throw `getLabel > unexpected object tree value`
       }
     },
     getChildren: tree => {
@@ -354,13 +354,12 @@
       }
     },
     constructTree: (label, children) => {
-      const childrenAcc = children.reduce((acc, child) => {
-        let key = Object.keys(child)[0];
-        acc[key] = child[key];
-        return acc
-      }, {});
-      return {
-        [label.key]: children.length === 0 ? label.value : childrenAcc
+      const labelKey = label && Object.keys(label) && Object.keys(label)[0];
+
+      return children.length === 0
+        ? label
+        : {
+        [labelKey]: Object.assign.apply(null, children)
       }
     },
   };
@@ -369,15 +368,21 @@
     const rootKey = 'root';
     const rootKeyMap = mapKeyfn(rootKey);
 
-    return mapOverTree(ObjectTreeLenses, ({ key, value }) => ({
-      key: mapKeyfn(key),
-      value: isLeafLabel({ key, value }) && !isEmptyObject(value)
-        ? mapValuefn(value)
-        : value
-    }), { root: obj })[rootKeyMap];
+    const mapped =  mapOverTree(objectTreeLenses, (tree) => {
+      const key = Object.keys(tree)[0];
+      const value = tree[key];
+
+      return {
+        [mapKeyfn(key)]: isLeafLabel(objectTreeLenses.getLabel(tree)) && !isEmptyObject(value)
+          ? mapValuefn(value)
+          : value
+      }
+    }, { root: obj });
+
+    return mapped[rootKeyMap];
   }
 
-  function isLeafLabel(label) { return ObjectTreeLenses.getChildren({ [label.key]: label.value }).length === 0}
+  function isLeafLabel(label) { return objectTreeLenses.getChildren({ [label.key]: label.value }).length === 0}
 
   function isEmptyObject(obj) {
     return obj && Object.keys(obj).length === 0 && obj.constructor === Object
@@ -388,12 +393,36 @@
       return Array.isArray(tree) ? tree[0] : tree
     },
     getChildren: tree => {
-      return Array.isArray(tree) ? tree[1] : []
+      return Array.isArray(tree)  ? tree[1] : []
     },
     constructTree: (label, children) => {
-      return children && Array.isArray(children) ? [label, children] : label
+      return children && Array.isArray(children) && children.length > 0 ? [label, children] : label
     },
   };
+
+  function switchTreeDataStructure(originLenses, targetLenses, tree) {
+    const { getLabel, getChildren } = originLenses;
+    const { constructTree } = targetLenses;
+    const getChildrenNumber = (tree, traversalState) => getChildren(tree, traversalState).length;
+
+    const traverse = {
+      seed: () => Map,
+      visit: (pathMap, traversalState, tree) => {
+        const { path } = traversalState.get(tree);
+        const label = getLabel(tree);
+        const children = times(
+          index => pathMap.get(stringify(path.concat(index))),
+          getChildrenNumber(tree, traversalState)
+        );
+        pathMap.set(stringify(path), constructTree(label, children));
+
+        return pathMap;
+      }
+    };
+
+    const newTreeStruct = postOrderTraverseTree(originLenses, traverse, tree);
+    return newTreeStruct.get(stringify(PATH_ROOT));
+  }
 
   exports.POST_ORDER = POST_ORDER;
   exports.PRE_ORDER = PRE_ORDER;
@@ -409,9 +438,10 @@
   exports.pruneWhen = pruneWhen;
   exports.getHashedTreeLenses = getHashedTreeLenses;
   exports.mapOverHashTree = mapOverHashTree;
-  exports.objectTreeLenses = ObjectTreeLenses;
+  exports.objectTreeLenses = objectTreeLenses;
   exports.mapOverObj = mapOverObj;
   exports.arrayTreeLenses = arrayTreeLenses;
+  exports.switchTreeDataStructure = switchTreeDataStructure;
 
   Object.defineProperty(exports, '__esModule', { value: true });
 
