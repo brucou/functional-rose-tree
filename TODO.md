@@ -11,4 +11,5 @@
  * in traversal
  * - getChildren(setTree(label, children)) = children
  * - getLabel(setTree(label, children)) = label
+ * understand what makes convert fails (difference between what is label between data structures?)
  */

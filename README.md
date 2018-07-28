@@ -10,7 +10,8 @@
   * [mapOverTree :: Lenses -> MapFn -> Tree -> Tree'](#mapovertree----lenses----mapfn----tree----tree-)
   * [pruneWhen :: Lenses -> Predicate -> Tree -> Tree](#prunewhen----lenses----predicate----tree----tree)
   * [visitTree :: ExtendedTraversalSpecs -> Tree -> A](#visittree----extendedtraversalspecs----tree----a)
-  * [switchTreeDataStructure :: Lenses -> Lenses -> Tree](#visittree----extendedtraversalspecs----tree----a)
+  * [switchTreeDataStructure :: Lenses -> Lenses -> Tree](#switchtreedatastructure----lenses----lenses----tree)
+  * [traverseObj :: ExtendedTraversalSpecs -> Tree -> A](#traverseobj----extendedtraversalspecs----tree----a)
 - [Tests](#tests)
 - [Build](#build)
 - [Install](#install)
@@ -698,6 +699,20 @@ becomes this equivalent tree :
 
 It is however impossible to convert any of those tree data structure towards an object tree.
 
+## traverseObj :: ExtendedTraversalSpecs -> Tree -> A
+### Description
+Allows to traverse an object (POJO), applying a visiting function to every property. Traversal 
+strategy can be specified (pre-order, post-order, or breadth-first).
+  
+### Types
+Types are as introduced previously. 
+
+### Other contracts
+Old same old.
+
+### Examples
+Cf. tests
+
 # Tests
 - `npm run test`
 
@@ -834,7 +849,4 @@ export const arrayTreeLenses = {
 ```
 
 # Conversion
-
-# Gotchas
-could be issues when a tree is not an object but a primitive... Because we use a map with tree as
- a key. It is possible that two different leaves being primitives would telescope... 
+**TODO**

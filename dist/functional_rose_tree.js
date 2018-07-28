@@ -97,6 +97,8 @@ exports.pruneWhen = pruneWhen;
 exports.getHashedTreeLenses = getHashedTreeLenses;
 exports.mapOverHashTree = mapOverHashTree;
 exports.mapOverObj = mapOverObj;
+exports.traverseObj = traverseObj;
+exports.switchTreeDataStructure = switchTreeDataStructure;
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
@@ -122,6 +124,10 @@ function merge(objA, objB) {
 function times(fn, n) {
   return Array.apply(null, { length: n }).map(Number.call, Number).map(fn);
 }
+
+var stringify = function stringify(path) {
+  return path.join(SEP);
+};
 
 /**
  *
@@ -166,9 +172,7 @@ function visitTree(traversalSpecs, tree) {
       add = store.add,
       takeAndRemoveOne = store.takeAndRemoveOne,
       isEmpty = store.isEmpty;
-  var getChildren = lenses.getChildren,
-      getLabel = lenses.getLabel,
-      setTree = lenses.setTree;
+  var getChildren = lenses.getChildren;
   var visit = traverse.visit,
       seedOrSeedConstructor = traverse.seed;
 
@@ -267,7 +271,7 @@ function postOrderTraverseTree(lenses, traverse, tree) {
     // call in the recursive post-order traversal algorithm
     // DOC : getChildren(tree, traversalState) also admit traversalState as argumnets but in second place
     getChildren: function getChildren(traversalState, tree) {
-      return predicate(tree, traversalState) ? [] : _getChildren3(tree, traversalState).concat(tree);
+      return predicate(tree, traversalState) ? [] : _getChildren3(tree, traversalState).concat([tree]);
     }
   };
   var traversalSpecs = {
@@ -291,11 +295,7 @@ function postOrderTraverseTree(lenses, traverse, tree) {
         // 1. label has been visited already : visit
         // 2. label has not been visited, and there are no children : visit
         // 3. label has not been visited, and there are children : don't visit, will do it later
-        if (predicate(tree, traversalState)) {
-          _visit(result, traversalState, tree);
-        }
-
-        return result;
+        return predicate(tree, traversalState) ? _visit(result, traversalState, tree) : result;
       }
     }
   };
@@ -489,12 +489,12 @@ function mapOverHashTree(sep, mapFn, obj) {
 }
 
 // Object as a tree
-var ObjectTreeLenses = exports.ObjectTreeLenses = {
+var objectTreeLenses = exports.objectTreeLenses = {
   getLabel: function getLabel(tree) {
     if ((typeof tree === "undefined" ? "undefined" : _typeof(tree)) === 'object' && !Array.isArray(tree) && Object.keys(tree).length === 1) {
-      return { key: Object.keys(tree)[0], value: Object.values(tree)[0] };
+      return tree;
     } else {
-      throw "getLabel > unexpected tree value";
+      throw "getLabel > unexpected object tree value";
     }
   },
   getChildren: function getChildren(tree) {
@@ -512,12 +512,9 @@ var ObjectTreeLenses = exports.ObjectTreeLenses = {
     }
   },
   constructTree: function constructTree(label, children) {
-    var childrenAcc = children.reduce(function (acc, child) {
-      var key = Object.keys(child)[0];
-      acc[key] = child[key];
-      return acc;
-    }, {});
-    return _defineProperty({}, label.key, children.length === 0 ? label.value : childrenAcc);
+    var labelKey = label && Object.keys(label) && Object.keys(label)[0];
+
+    return children.length === 0 ? label : _defineProperty({}, labelKey, Object.assign.apply(null, children));
   }
 };
 
@@ -528,24 +525,51 @@ function mapOverObj(_ref4, obj) {
   var rootKey = 'root';
   var rootKeyMap = mapKeyfn(rootKey);
 
-  return mapOverTree(ObjectTreeLenses, function (_ref5) {
-    var key = _ref5.key,
-        value = _ref5.value;
-    return {
-      key: mapKeyfn(key),
-      value: isLeafLabel({ key: key, value: value }) && !isEmptyObject(value) ? mapValuefn(value) : value
-    };
-  }, { root: obj })[rootKeyMap];
+  var mapped = mapOverTree(objectTreeLenses, function (tree) {
+    var key = Object.keys(tree)[0];
+    var value = tree[key];
+
+    return _defineProperty({}, mapKeyfn(key), isLeafLabel(objectTreeLenses.getLabel(tree)) && !isEmptyObject(value) ? mapValuefn(value) : value);
+  }, { root: obj });
+
+  return mapped[rootKeyMap];
+}
+
+function traverseObj(traverse, obj) {
+  var treeObj = { root: obj };
+  var strategy = traverse.strategy,
+      seed = traverse.seed,
+      visit = traverse.visit;
+
+  var traverseFn = {
+    BFS: breadthFirstTraverseTree,
+    PRE_ORDER: preorderTraverseTree,
+    POST_ORDER: postOrderTraverseTree
+  }[strategy] || preorderTraverseTree;
+  var decoratedTraverse = {
+    seed: seed,
+    visit: function visitAllButRoot(visitAcc, traversalState, tree) {
+      var _traversalState$get2 = traversalState.get(tree),
+          path = _traversalState$get2.path;
+
+      return path === PATH_ROOT ? visitAcc : visit(visitAcc, traversalState, tree);
+    }
+  };
+
+  var traversedTreeObj = traverseFn(objectTreeLenses, decoratedTraverse, treeObj);
+
+  return traversedTreeObj;
 }
 
 function isLeafLabel(label) {
-  return ObjectTreeLenses.getChildren(_defineProperty({}, label.key, label.value)).length === 0;
+  return objectTreeLenses.getChildren(_defineProperty({}, label.key, label.value)).length === 0;
 }
 
 function isEmptyObject(obj) {
   return obj && Object.keys(obj).length === 0 && obj.constructor === Object;
 }
 
+// Arrays as trees
 var arrayTreeLenses = exports.arrayTreeLenses = {
   getLabel: function getLabel(tree) {
     return Array.isArray(tree) ? tree[0] : tree;
@@ -554,8 +578,39 @@ var arrayTreeLenses = exports.arrayTreeLenses = {
     return Array.isArray(tree) ? tree[1] : [];
   },
   constructTree: function constructTree(label, children) {
-    return children && Array.isArray(children) ? [label, children] : label;
+    return children && Array.isArray(children) && children.length > 0 ? [label, children] : label;
   }
-};
+
+  // Conversion
+};function switchTreeDataStructure(originLenses, targetLenses, tree) {
+  var getLabel = originLenses.getLabel,
+      getChildren = originLenses.getChildren;
+  var constructTree = targetLenses.constructTree;
+
+  var getChildrenNumber = function getChildrenNumber(tree, traversalState) {
+    return getChildren(tree, traversalState).length;
+  };
+
+  var traverse = {
+    seed: function seed() {
+      return Map;
+    },
+    visit: function visit(pathMap, traversalState, tree) {
+      var _traversalState$get3 = traversalState.get(tree),
+          path = _traversalState$get3.path;
+
+      var label = getLabel(tree);
+      var children = times(function (index) {
+        return pathMap.get(stringify(path.concat(index)));
+      }, getChildrenNumber(tree, traversalState));
+      pathMap.set(stringify(path), constructTree(label, children));
+
+      return pathMap;
+    }
+  };
+
+  var newTreeStruct = postOrderTraverseTree(originLenses, traverse, tree);
+  return newTreeStruct.get(stringify(PATH_ROOT));
+}
 },{}]},{},[1])
 //# sourceMappingURL=/functional_rose_tree.map

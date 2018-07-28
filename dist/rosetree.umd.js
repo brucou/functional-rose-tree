@@ -382,12 +382,37 @@
     return mapped[rootKeyMap];
   }
 
+  function traverseObj(traverse, obj){
+    const treeObj = {root : obj};
+    const {strategy, seed, visit} = traverse;
+    const traverseFn = {
+      BFS : breadthFirstTraverseTree,
+      PRE_ORDER : preorderTraverseTree,
+      POST_ORDER: postOrderTraverseTree
+    }[strategy] || preorderTraverseTree;
+    const decoratedTraverse = {
+      seed,
+      visit : function visitAllButRoot(visitAcc, traversalState, tree){
+        const {path} = traversalState.get(tree);
+
+        return path === PATH_ROOT
+        ? visitAcc
+          : visit(visitAcc, traversalState, tree)
+      }
+    };
+
+    const traversedTreeObj = traverseFn(objectTreeLenses, decoratedTraverse, treeObj);
+
+    return traversedTreeObj
+  }
+
   function isLeafLabel(label) { return objectTreeLenses.getChildren({ [label.key]: label.value }).length === 0}
 
   function isEmptyObject(obj) {
     return obj && Object.keys(obj).length === 0 && obj.constructor === Object
   }
 
+  // Arrays as trees
   const arrayTreeLenses = {
     getLabel: tree => {
       return Array.isArray(tree) ? tree[0] : tree
@@ -400,6 +425,7 @@
     },
   };
 
+  // Conversion
   function switchTreeDataStructure(originLenses, targetLenses, tree) {
     const { getLabel, getChildren } = originLenses;
     const { constructTree } = targetLenses;
@@ -440,6 +466,7 @@
   exports.mapOverHashTree = mapOverHashTree;
   exports.objectTreeLenses = objectTreeLenses;
   exports.mapOverObj = mapOverObj;
+  exports.traverseObj = traverseObj;
   exports.arrayTreeLenses = arrayTreeLenses;
   exports.switchTreeDataStructure = switchTreeDataStructure;
 
