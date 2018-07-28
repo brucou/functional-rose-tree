@@ -2,12 +2,11 @@
 
 import * as QUnit from "qunitjs";
 import {
-  BFS, breadthFirstTraverseTree, forEachInTree, mapOverTree, POST_ORDER, postOrderTraverseTree, preorderTraverseTree,
-  pruneWhen, reduceTree
+  arrayTreeLenses, BFS, breadthFirstTraverseTree, forEachInTree, getHashedTreeLenses, mapOverHashTree, mapOverObj,
+  mapOverTree, objectTreeLenses, POST_ORDER, postOrderTraverseTree, preorderTraverseTree, pruneWhen, reduceTree,
+  switchTreeDataStructure, traverseObj
 } from "../";
-import {
-  arrayTreeLenses, getHashedTreeLenses, mapOverHashTree, mapOverObj, objectTreeLenses, switchTreeDataStructure
-} from "../index"
+import { PRE_ORDER } from "../index"
 
 function merge(objA, objB) {
   return Object.assign({}, objA, objB);
@@ -35,7 +34,7 @@ const tree = {
 const lenses = {
   getLabel: tree => tree.label,
   getChildren: tree => tree.children || [],
-  constructTree : (label, children) => ({label, children})
+  constructTree: (label, children) => ({ label, children })
 };
 const traverse = {
   seed: [],
@@ -295,9 +294,10 @@ QUnit.test("main case - object traversal - map over", function exec_test(assert)
   assert.deepEqual(actual, expected, `Works!`);
 });
 
-QUnit.test("main case - object traversal - traverse", function exec_test(assert) {
+QUnit.test("main case - object traversal - BFS traverse", function exec_test(assert) {
   const lenses = objectTreeLenses;
   const traverse = {
+    strategy: BFS,
     seed: [],
     visit: (result, traversalState, tree) => {
       const label = lenses.getLabel(tree);
@@ -306,10 +306,6 @@ QUnit.test("main case - object traversal - traverse", function exec_test(assert)
       return result;
     }
   };
-
-  function traverseObj(lenses, traverse, obj) {
-    return breadthFirstTraverseTree(lenses, traverse, { root: obj })
-  }
 
   const obj = {
     "combinatorName": undefined,
@@ -334,34 +330,9 @@ QUnit.test("main case - object traversal - traverse", function exec_test(assert)
     ],
     "settings": {}
   }
-  const actual = traverseObj(lenses, traverse, obj);
+  const actual = traverseObj(traverse, obj);
 
   const expected = [
-    {
-      "root": {
-        "combinatorName": undefined,
-        "componentName": "sinkUpdatingComponent",
-        "emits": {
-          "identifier": "a_circular_behavior_source",
-          "notification": {
-            "kind": "N",
-            "value": {
-              "key": "value"
-            }
-          },
-          "type": 0
-        },
-        "id": 3,
-        "logType": "runtime",
-        "path": [
-          0,
-          0,
-          0,
-          2
-        ],
-        "settings": {}
-      }
-    },
     {
       "combinatorName": undefined
     },
@@ -421,6 +392,214 @@ QUnit.test("main case - object traversal - traverse", function exec_test(assert)
     },
     {
       "key": "value"
+    }
+  ];
+
+  assert.deepEqual(actual, expected, `Works!`);
+});
+
+QUnit.test("main case - object traversal - preorder traverse", function exec_test(assert) {
+  const lenses = objectTreeLenses;
+  const traverse = {
+    strategy: PRE_ORDER,
+    seed: [],
+    visit: (result, traversalState, tree) => {
+      const label = lenses.getLabel(tree);
+      result.push(label);
+
+      return result;
+    }
+  };
+
+  const obj = {
+    "combinatorName": undefined,
+    "componentName": "sinkUpdatingComponent",
+    "emits": {
+      "identifier": "a_circular_behavior_source",
+      "notification": {
+        "kind": "N",
+        "value": {
+          "key": "value"
+        }
+      },
+      "type": 0
+    },
+    "id": 3,
+    "logType": "runtime",
+    "path": [
+      0,
+      0,
+      0,
+      2
+    ],
+    "settings": {}
+  }
+  const actual = traverseObj(traverse, obj);
+
+  const expected = [
+    {
+      "combinatorName": undefined
+    },
+    {
+      "componentName": "sinkUpdatingComponent"
+    },
+    {
+      "emits": {
+        "identifier": "a_circular_behavior_source",
+        "notification": {
+          "kind": "N",
+          "value": {
+            "key": "value"
+          }
+        },
+        "type": 0
+      }
+    },
+    {
+      "identifier": "a_circular_behavior_source"
+    },
+    {
+      "notification": {
+        "kind": "N",
+        "value": {
+          "key": "value"
+        }
+      }
+    },
+    {
+      "kind": "N"
+    },
+    {
+      "value": {
+        "key": "value"
+      }
+    },
+    {
+      "key": "value"
+    },
+    {
+      "type": 0
+    },
+    {
+      "id": 3
+    },
+    {
+      "logType": "runtime"
+    },
+    {
+      "path": [
+        0,
+        0,
+        0,
+        2
+      ]
+    },
+    {
+      "settings": {}
+    }
+  ];
+
+  assert.deepEqual(actual, expected, `Works!`);
+});
+
+QUnit.test("main case - object traversal - post-order traverse", function exec_test(assert) {
+  const lenses = objectTreeLenses;
+  const traverse = {
+    strategy: POST_ORDER,
+    seed: [],
+    visit: (result, traversalState, tree) => {
+      const label = lenses.getLabel(tree);
+      result.push(label);
+
+      return result;
+    }
+  };
+
+  const obj = {
+    "combinatorName": undefined,
+    "componentName": "sinkUpdatingComponent",
+    "emits": {
+      "identifier": "a_circular_behavior_source",
+      "notification": {
+        "kind": "N",
+        "value": {
+          "key": "value"
+        }
+      },
+      "type": 0
+    },
+    "id": 3,
+    "logType": "runtime",
+    "path": [
+      0,
+      0,
+      0,
+      2
+    ],
+    "settings": {}
+  }
+  const actual = traverseObj(traverse, obj);
+
+  const expected = [
+    {
+      "combinatorName": undefined
+    },
+    {
+      "componentName": "sinkUpdatingComponent"
+    },
+    {
+      "identifier": "a_circular_behavior_source"
+    },
+    {
+      "kind": "N"
+    },
+    {
+      "key": "value"
+    },
+    {
+      "value": {
+        "key": "value"
+      }
+    },
+    {
+      "notification": {
+        "kind": "N",
+        "value": {
+          "key": "value"
+        }
+      }
+    },
+    {
+      "type": 0
+    },
+    {
+      "emits": {
+        "identifier": "a_circular_behavior_source",
+        "notification": {
+          "kind": "N",
+          "value": {
+            "key": "value"
+          }
+        },
+        "type": 0
+      }
+    },
+    {
+      "id": 3
+    },
+    {
+      "logType": "runtime"
+    },
+    {
+      "path": [
+        0,
+        0,
+        0,
+        2
+      ]
+    },
+    {
+      "settings": {}
     }
   ];
 
@@ -554,14 +733,14 @@ QUnit.test("main case - array tree traversal - traverse", function exec_test(ass
       const graphNodes = children.map(child => {
         return {
           data: {
-            id : [lenses.getLabel(child), path.join('.')].join('.'),
-            label : lenses.getLabel(child),
-            parent : parentLabel
+            id: [lenses.getLabel(child), path.join('.')].join('.'),
+            label: lenses.getLabel(child),
+            parent: parentLabel
           }
         }
       });
 
-      return result.concat(graphNodes )
+      return result.concat(graphNodes)
     }
   }
 
@@ -714,7 +893,7 @@ QUnit.test("main case - array tree traversal - postorder traversal", function ex
       const label = lenses.getLabel(tree);
       const children = lenses.getChildren(tree);
 
-      return result.concat({path, label, children})
+      return result.concat({ path, label, children })
     }
   }
 
@@ -854,7 +1033,7 @@ QUnit.test("main case - switching tree data structure - from array tree to label
 QUnit.module("Edge cases - identiical values", {});
 
 QUnit.test("main case - preorderTraverseTree - label tree - identical labels", function exec_test(assert) {
-  const tree =  {
+  const tree = {
     label: "root",
     children: [
       { label: "same" },
@@ -880,7 +1059,7 @@ QUnit.test("main case - preorderTraverseTree - label tree - identical labels", f
 });
 
 QUnit.test("main case - postorderTraverseTree - label tree - identical labels", function exec_test(assert) {
-  const tree =  {
+  const tree = {
     label: "root",
     children: [
       { label: "same" },
@@ -906,7 +1085,7 @@ QUnit.test("main case - postorderTraverseTree - label tree - identical labels", 
 });
 
 QUnit.test("main case - bfsOrderTraverseTree - label tree - identical labels", function exec_test(assert) {
-  const tree =  {
+  const tree = {
     label: "root",
     children: [
       { label: "same" },
@@ -943,14 +1122,14 @@ QUnit.test("main case - preorder array tree traversal - traverse - identical lab
       const graphNodes = children.map(child => {
         return {
           data: {
-            id : [lenses.getLabel(child), path.join('.')].join('.'),
-            label : lenses.getLabel(child),
-            parent : parentLabel
+            id: [lenses.getLabel(child), path.join('.')].join('.'),
+            label: lenses.getLabel(child),
+            parent: parentLabel
           }
         }
       });
 
-      return result.concat(graphNodes )
+      return result.concat(graphNodes)
     }
   }
 
@@ -1084,14 +1263,14 @@ QUnit.test("main case - postorder tree traversal - traverse - identical labels",
       const graphNodes = children.map(child => {
         return {
           data: {
-            id : [lenses.getLabel(child), path.join('.')].join('.'),
-            label : lenses.getLabel(child),
-            parent : parentLabel
+            id: [lenses.getLabel(child), path.join('.')].join('.'),
+            label: lenses.getLabel(child),
+            parent: parentLabel
           }
         }
       });
 
-      return result.concat(graphNodes )
+      return result.concat(graphNodes)
     }
   }
 

@@ -376,6 +376,30 @@ export function mapOverObj({ key: mapKeyfn, leafValue: mapValuefn }, obj) {
   return mapped[rootKeyMap];
 }
 
+export function traverseObj(traverse, obj){
+  const treeObj = {root : obj};
+  const {strategy, seed, visit} = traverse;
+  const traverseFn = {
+    BFS : breadthFirstTraverseTree,
+    PRE_ORDER : preorderTraverseTree,
+    POST_ORDER: postOrderTraverseTree
+  }[strategy] || preorderTraverseTree;
+  const decoratedTraverse = {
+    seed,
+    visit : function visitAllButRoot(visitAcc, traversalState, tree){
+      const {path} = traversalState.get(tree);
+
+      return path === PATH_ROOT
+      ? visitAcc
+        : visit(visitAcc, traversalState, tree)
+    }
+  };
+
+  const traversedTreeObj = traverseFn(objectTreeLenses, decoratedTraverse, treeObj);
+
+  return traversedTreeObj
+}
+
 function isLeafLabel(label) { return objectTreeLenses.getChildren({ [label.key]: label.value }).length === 0}
 
 function isEmptyObject(obj) {
