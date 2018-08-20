@@ -336,7 +336,7 @@ export const objectTreeLenses = {
   getChildren: tree => {
     if (typeof tree === 'object' && !Array.isArray(tree) && Object.keys(tree).length === 1) {
       let value = Object.values(tree)[0];
-      if (typeof value === 'object' && !Array.isArray(value)) {
+      if (value && typeof value === 'object' && !Array.isArray(value)) {
         return Object.keys(value).map(prop => ({ [prop]: value[prop] }))
       }
       else {
