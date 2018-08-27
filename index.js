@@ -324,7 +324,10 @@ export function mapOverHashTree(sep, mapFn, obj) {
 }
 
 // Object as a tree
+function isLeafLabel(label) { return objectTreeLenses.getChildren({ [label.key]: label.value }).length === 0}
+
 export const objectTreeLenses = {
+  isLeafLabel,
   getLabel: tree => {
     if (typeof tree === 'object' && !Array.isArray(tree) && Object.keys(tree).length === 1) {
       return tree;
@@ -389,7 +392,7 @@ export function traverseObj(traverse, obj){
     visit : function visitAllButRoot(visitAcc, traversalState, tree){
       const {path} = traversalState.get(tree);
 
-      return path === PATH_ROOT
+      return JSON.stringify(path)=== JSON.stringify(PATH_ROOT)
       ? visitAcc
         : visit(visitAcc, traversalState, tree)
     }
@@ -399,8 +402,6 @@ export function traverseObj(traverse, obj){
 
   return traversedTreeObj
 }
-
-function isLeafLabel(label) { return objectTreeLenses.getChildren({ [label.key]: label.value }).length === 0}
 
 function isEmptyObject(obj) {
   return obj && Object.keys(obj).length === 0 && obj.constructor === Object
