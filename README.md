@@ -129,6 +129,7 @@ target language and specific parser. The ADT technique also allows for higher re
 **NOTE** : All functions are provided without currying. We paid attention to the order of parameters to 
 facilitate currying for those who will find it convenient. The `ramda` functional library can be 
 used easily to curry any relevant provided function. 
+**NOTE** : This API style could also be called [interface-passing style](https://common-lisp.net/~frideau/lil-ilc2012/lil-ilc2012.html) 
 
 # Key contracts
 ## Key types
