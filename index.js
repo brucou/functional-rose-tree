@@ -324,7 +324,9 @@ export function mapOverHashTree(sep, mapFn, obj) {
 }
 
 // Object as a tree
-function isLeafLabel(label) { return objectTreeLenses.getChildren({ [label.key]: label.value }).length === 0}
+function isLeafLabel(label) {
+  return objectTreeLenses.getChildren(label).length === 0
+}
 
 export const objectTreeLenses = {
   isLeafLabel,
@@ -369,6 +371,7 @@ export function mapOverObj({ key: mapKeyfn, leafValue: mapValuefn }, obj) {
     const key = Object.keys(tree)[0];
     const value = tree[key];
 
+    debugger
     return {
       [mapKeyfn(key)]: isLeafLabel(objectTreeLenses.getLabel(tree)) && !isEmptyObject(value)
         ? mapValuefn(value)

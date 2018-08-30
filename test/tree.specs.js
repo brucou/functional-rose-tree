@@ -268,8 +268,7 @@ QUnit.test("main case - object traversal - map over", function exec_test(assert)
         2
       ],
       "settings": {}
-    }
-  ;
+    };
 
   const actual = mapOverObj({ key: key => 'K' + key, leafValue: value => 'K' + value }, obj);
   const expected = {
