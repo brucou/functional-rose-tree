@@ -74,6 +74,9 @@ replace, optional : tree diff(hard), some, every (not so useful), transducers (w
 
 At the current state of the library, only the basic operations are implemented.
 
+As a bonus, lenses for object traversal are included and allow traversing and mapping over a 
+javascript object (POJO).
+
 # Concepts
 In computing, a multi-way tree or rose tree is a tree data structure with a variable and 
 unbounded number of branches per node[^1]. The name rose tree for this structure is prevalent in 
