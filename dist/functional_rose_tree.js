@@ -489,7 +489,12 @@ function mapOverHashTree(sep, mapFn, obj) {
 }
 
 // Object as a tree
+function isLeafLabel(label) {
+  return objectTreeLenses.getChildren(label).length === 0;
+}
+
 var objectTreeLenses = exports.objectTreeLenses = {
+  isLeafLabel: isLeafLabel,
   getLabel: function getLabel(tree) {
     if ((typeof tree === "undefined" ? "undefined" : _typeof(tree)) === 'object' && !Array.isArray(tree) && Object.keys(tree).length === 1) {
       return tree;
@@ -500,7 +505,7 @@ var objectTreeLenses = exports.objectTreeLenses = {
   getChildren: function getChildren(tree) {
     if ((typeof tree === "undefined" ? "undefined" : _typeof(tree)) === 'object' && !Array.isArray(tree) && Object.keys(tree).length === 1) {
       var value = Object.values(tree)[0];
-      if ((typeof value === "undefined" ? "undefined" : _typeof(value)) === 'object' && !Array.isArray(value)) {
+      if (value && (typeof value === "undefined" ? "undefined" : _typeof(value)) === 'object' && !Array.isArray(value)) {
         return Object.keys(value).map(function (prop) {
           return _defineProperty({}, prop, value[prop]);
         });
@@ -552,17 +557,13 @@ function traverseObj(traverse, obj) {
       var _traversalState$get2 = traversalState.get(tree),
           path = _traversalState$get2.path;
 
-      return path === PATH_ROOT ? visitAcc : visit(visitAcc, traversalState, tree);
+      return JSON.stringify(path) === JSON.stringify(PATH_ROOT) ? visitAcc : visit(visitAcc, traversalState, tree);
     }
   };
 
   var traversedTreeObj = traverseFn(objectTreeLenses, decoratedTraverse, treeObj);
 
   return traversedTreeObj;
-}
-
-function isLeafLabel(label) {
-  return objectTreeLenses.getChildren(_defineProperty({}, label.key, label.value)).length === 0;
 }
 
 function isEmptyObject(obj) {

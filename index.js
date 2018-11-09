@@ -371,7 +371,6 @@ export function mapOverObj({ key: mapKeyfn, leafValue: mapValuefn }, obj) {
     const key = Object.keys(tree)[0];
     const value = tree[key];
 
-    debugger
     return {
       [mapKeyfn(key)]: isLeafLabel(objectTreeLenses.getLabel(tree)) && !isEmptyObject(value)
         ? mapValuefn(value)
