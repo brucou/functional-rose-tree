@@ -7,12 +7,13 @@
   "module": "index.js",
   "main": "dist/rosetree.umd.js",
   "scripts": {
-    "build": "parcel build index.js --no-minify --out-file functional_rose_tree",
-    "serve": "parcel build index.js --out-file functional_rose_tree.min",
+    "build": "parcel build src/index.js --no-minify --out-file functional_rose_tree",
+    "serve": "parcel build src/index.js --out-file functional_rose_tree.min",
     "test": "parcel test/index.html",
     "dist": "npm run umd && npm run min",
     "umd": "rollup src/index.js -o dist/rosetree.umd.js -f umd --name Rosetree --sourcemap ",
-    "min": "rollup -o dist/rosetree.umd.min.js -f umd --name Rosetree --sourcemap -c rollup.config.js "
+    "min": "rollup -o dist/rosetree.umd.min.js -f umd --name Rosetree --sourcemap -c rollup.config.js ",
+    "version": "npm run build"
   },
   "devDependencies": {
     "@pika/plugin-build-node": "^0.4.0",
