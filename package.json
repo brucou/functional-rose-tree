@@ -11,17 +11,54 @@
     "serve": "parcel build index.js --out-file functional_rose_tree.min",
     "test": "parcel test/index.html",
     "dist": "npm run umd && npm run min",
-    "umd": "rollup index.js -o dist/rosetree.umd.js -f umd --name Rosetree --sourcemap ",
-    "min": "rollup index.js -o dist/rosetree.umd.min.js -f umd --name Rosetree --sourcemap -c rollup.config.js "
+    "umd": "rollup src/index.js -o dist/rosetree.umd.js -f umd --name Rosetree --sourcemap ",
+    "min": "rollup -o dist/rosetree.umd.min.js -f umd --name Rosetree --sourcemap -c rollup.config.js "
   },
   "devDependencies": {
+    "@pika/plugin-build-node": "^0.4.0",
+    "@pika/plugin-build-types": "^0.4.0",
+    "@pika/plugin-build-web": "^0.4.0",
+    "@pika/plugin-bundle-web": "^0.4.0",
+    "@pika/plugin-standard-pkg": "^0.4.0",
     "babel-core": "^6.26.0",
     "babel-preset-env": "1.6.1",
     "jquery": "3.3.1",
     "parcel-bundler": "^1.7.0",
+    "pika-plugin-minify": "^0.1.0",
+    "pika-plugin-unpkg-field": "^1.1.0",
     "qunitjs": "^1.20.0",
     "rollup": "^0.57.1",
     "rollup-plugin-uglify": "^3.0.0"
   },
-  "dependencies": {}
+  "dependencies": {},
+  "@pika/pack": {
+    "pipeline": [
+      [
+        "@pika/plugin-standard-pkg",
+        {
+          "exclude": [
+            "test/**/*"
+          ]
+        }
+      ],
+      [
+        "@pika/plugin-build-node"
+      ],
+      [
+        "@pika/plugin-build-web"
+      ],
+      [
+        "@pika/plugin-bundle-web"
+      ],
+      [
+        "pika-plugin-unpkg-field"
+      ],
+      [
+        "pika-plugin-minify",
+        {
+          "warnings": "verbose"
+        }
+      ]
+    ]
+  }
 }

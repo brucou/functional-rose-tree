@@ -3,10 +3,9 @@
 import * as QUnit from "qunitjs";
 import {
   arrayTreeLenses, BFS, breadthFirstTraverseTree, forEachInTree, getHashedTreeLenses, mapOverHashTree, mapOverObj,
-  mapOverTree, objectTreeLenses, POST_ORDER, postOrderTraverseTree, preorderTraverseTree, pruneWhen, reduceTree,
+  mapOverTree, objectTreeLenses, POST_ORDER, PRE_ORDER, postOrderTraverseTree, preorderTraverseTree, pruneWhen, reduceTree,
   switchTreeDataStructure, traverseObj
-} from "../";
-import { PRE_ORDER } from "../index"
+} from "../src";
 
 function merge(objA, objB) {
   return Object.assign({}, objA, objB);
