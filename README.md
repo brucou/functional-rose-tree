@@ -584,15 +584,15 @@ mini UI</y:NodeLabel>
 we extract the state hierarchy as:
 
 ```json
-{ 'ღ':
-   { 'n0ღinit': '',
-     'n1ღGroup 1':
-      { 'n1::n0ღShowing\nmini UI': '',
-        'n1::n1ღinit': '',
-        'n1::n2ღShowing\nbig UI': '',
-        'n1::n3ღH*': '' 
+{ "ღ":
+   { "n0ღinit": "",
+     "n1ღGroup 1":
+      { "n1::n0ღShowing\nmini UI": "",
+        "n1::n1ღinit": "",
+        "n1::n2ღShowing\nbig UI": "",
+        "n1::n3ღH*": "" 
       },
-     'n2ღupdating': '' 
+     "n2ღupdating": "" 
    } 
 }
 ```
@@ -600,12 +600,12 @@ we extract the state hierarchy as:
 and the mapping between the yEd node naming and the user-generated node names as follows:
 
 ```json
-{ n0: 'init',
-  'n1::n0': 'Showing\nmini UI',
-  'n1::n1': 'init',
-  'n1::n2': 'Showing\nbig UI',
-  'n1::n3': 'H*',
-  n2: 'updating' 
+{ "n0": "init",
+  "n1::n0": "Showing\nmini UI",
+  "n1::n1": "init",
+  "n1::n2": "Showing\nbig UI",
+  "n1::n3": "H*",
+  "n2": "updating" 
 }
 
 ``` 
