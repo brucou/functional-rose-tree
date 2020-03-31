@@ -16,22 +16,29 @@
     "version": "npm run build"
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.4.5",
     "@pika/plugin-build-node": "^0.4.0",
     "@pika/plugin-build-types": "^0.4.0",
     "@pika/plugin-build-web": "^0.4.0",
     "@pika/plugin-bundle-web": "^0.4.0",
     "@pika/plugin-standard-pkg": "^0.4.0",
     "babel-core": "^6.26.0",
-    "babel-preset-env": "1.6.1",
     "jquery": "3.3.1",
     "parcel-bundler": "^1.7.0",
     "pika-plugin-minify": "^0.1.0",
     "pika-plugin-unpkg-field": "^1.1.0",
     "qunitjs": "^1.20.0",
-    "rollup": "^0.57.1",
-    "rollup-plugin-uglify": "^3.0.0"
+    "rollup": "^1.16.2",
+    "rollup-plugin-babel": "^4.3.3",
+    "rollup-plugin-terser": "^5.0.0",
+    "rollup-plugin-uglify": "^6.0.2"
   },
-  "dependencies": {},
+  "dependencies": {
+    "babel-cli": "^6.26.0"
+  },
+  "browserslist": [
+    "not ie <= 8"
+  ],
   "@pika/pack": {
     "pipeline": [
       [

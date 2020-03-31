@@ -1,8 +1,8 @@
-import uglify from 'rollup-plugin-uglify';
+import { terser } from "rollup-plugin-terser";
 
 export default {
-  entry: 'src/index.js',
+  input: 'src/index.js',
   plugins: [
-    uglify()
+    terser(),
   ]
 };

@@ -437,10 +437,12 @@ QUnit.test("main case - forEachInTree", function exec_test(assert) {
 
 ## mapOverTree :: Lenses -> MapFn -> Tree -> Tree'
 ### Description 
-Traverse a tree, applying a mapping function, while, and returning a tree with the same 
-structure, containing the mapped nodes. Order of traversal is irrelevant here, as all nodes of 
-the tree are to be traversed, and the mapping function is assumed to be a pure function. Note 
-that the `constructTree` lens is mandatory here to rebuild the tree from its nodes.
+Traverse a tree, applying a mapping function, while, and returning a mapped tree, containing the  
+mapped nodes. The `constructTree` lens is mandatory here to rebuild the tree from its nodes. The
+origin tree is traversed from the leaves (post-order traversal) upwards. As the traversal progress,
+`constructTree` maps first the leaves, and recursively maps the mapped children together with each 
+traversed compound node. We signal that with the signature `constructTree :: E'xF' -> T'` 
+for `constructTree`, where `E'` is a mapped label, and `F` are mapped children.
 
 ### Types
 - `Tree :: T`
@@ -448,7 +450,7 @@ that the `constructTree` lens is mandatory here to rebuild the tree from its nod
 - `Traversal :: BFS | PRE_ORDER | POST_ORDER`
 - `State :: {{isAdded :: Boolean, isVisited :: Boolean, path :: Array<Number>, ...}}` (extensible record)
 - `TraversalState :: Map<T, State>`
-- `Lenses :: {{getLabel :: T -> E, getChildren :: T -> F, constructTree :: ExF -> T}}`
+- `Lenses :: {{getLabel :: T -> E, getChildren :: T -> F, constructTree :: E'xF' -> T'}}`
 - `MapFn :: E -> E'`
 
 ### Examples
@@ -490,6 +492,179 @@ QUnit.test("main case - mapOverTree", function exec_test(assert) {
 
   assert.deepEqual(actual, expected, `Works!`);
 });
+
+```
+
+### Real-life example
+In this example, we map `.graphml` XML file describing a compound graph to the corresponding state 
+hierarchy expressed as an object. Given the following graph:
+
+![Example graph](https://imgur.com/9KpIiSR.png) 
+
+with the following graphml:
+
+```xml
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<graphml ...>
+  <!--Created by yEd 3.16.1-->
+  <key attr.name="Description" attr.type="string" for="graph" id="d0"/>
+  (...)
+  <key for="edge" id="d10" yfiles.type="edgegraphics"/>
+  <graph edgedefault="directed" id="G">
+    <data key="d0"/>
+    <node id="n0">
+      <data key="d6">
+        <y:ShapeNode>
+          <y:Geometry height="30.0" width="30.0" x="405.42301587301586" y="467.0"/>
+          <y:Fill color="#FF6600" transparent="false"/>
+          <y:BorderStyle color="#000000" raised="false" type="line" width="1.0"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" horizontalTextPosition="center" iconTextGap="4" modelName="internal" modelPosition="c" textColor="#000000" verticalTextPosition="bottom" visible="true" width="21.994140625" x="4.0029296875" y="5.6494140625">init</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="n1" yfiles.foldertype="group">
+      <data key="d4"/>
+      <data key="d5"/>
+      <data key="d6">
+        <y:ProxyAutoBoundsNode>
+          <y:Realizers active="0">
+            <y:GroupNode>
+             (...)
+              <y:NodeLabel alignment="right" autoSizePolicy="node_width" backgroundColor="#EBEBEB" borderDistance="0.0" fontFamily="Dialog" fontSize="15" fontStyle="plain" hasLineColor="false" height="22.37646484375" horizontalTextPosition="center" iconTextGap="4" modelName="internal" modelPosition="t" textColor="#000000" verticalTextPosition="bottom" visible="true" width="96.0" x="0.0" y="0.0">Group 1</y:NodeLabel>
+             (...)
+            </y:GroupNode>
+            <y:GenericGroupNode configuration="PanelNode">
+             (...)
+            </y:GenericGroupNode>
+          </y:Realizers>
+        </y:ProxyAutoBoundsNode>
+      </data>
+      <graph edgedefault="directed" id="n1:">
+        <node id="n1::n0">
+          <data key="d6">
+            <y:ShapeNode>
+              <y:Geometry height="61.0" width="64.0" x="223.39523809523808" y="161.0"/>
+              <y:Fill color="#FFCC00" transparent="false"/>
+              <y:BorderStyle color="#000000" raised="false" type="line" width="1.0"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="33.40234375" horizontalTextPosition="center" iconTextGap="4" modelName="internal" modelPosition="c" textColor="#000000" verticalTextPosition="bottom" visible="true" width="53.9921875" x="5.00390625" y="13.798828125">Showing
+mini UI</y:NodeLabel>
+              <y:Shape type="roundrectangle"/>
+            </y:ShapeNode>
+          </data>
+        </node>
+        <node id="n1::n1">
+             (...)
+        </node>
+        (...)
+      </graph>
+    </node>
+   (...)
+    <edge id="e0" source="n0" target="n1">
+      <data key="d9"/>
+      <data key="d10">
+        <y:PolyLineEdge>
+          <y:Path sx="0.0" sy="7.5" tx="0.0" ty="239.688232421875"/>
+          <y:LineStyle color="#000000" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="33.40234375" horizontalTextPosition="center" iconTextGap="4" modelName="side_slider" preferredPlacement="right" ratio="0.0" textColor="#000000" verticalTextPosition="bottom" visible="true" width="52.0234375" x="-64.1347844199529" y="2.0">^K
+/ activate<y:PreferredPlacementDescriptor angle="0.0" angleOffsetOnRightSide="0" angleReference="absolute" angleRotationOnRightSide="co" distance="-1.0" placement="anywhere" side="right" sideReference="relative_to_edge_flow"/>
+          </y:EdgeLabel>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    (...)
+  </graph>
+  (...)
+</graphml>
+
+``` 
+
+we extract the state hierarchy as:
+
+```json
+{ 'ღ':
+   { 'n0ღinit': '',
+     'n1ღGroup 1':
+      { 'n1::n0ღShowing\nmini UI': '',
+        'n1::n1ღinit': '',
+        'n1::n2ღShowing\nbig UI': '',
+        'n1::n3ღH*': '' 
+      },
+     'n2ღupdating': '' 
+   } 
+}
+```
+
+and the mapping between the yEd node naming and the user-generated node names as follows:
+
+```json
+{ n0: 'init',
+  'n1::n0': 'Showing\nmini UI',
+  'n1::n1': 'init',
+  'n1::n2': 'Showing\nbig UI',
+  'n1::n3': 'H*',
+  n2: 'updating' 
+}
+
+``` 
+
+The code is the following: 
+
+```js
+const parser = require('fast-xml-parser');
+const {mapOverTree} = require('fp-rosetree');
+const {lensPath, view, mergeAll} = require('ramda');
+const STATE_LABEL_SEP='ღ';
+
+// Lenses for traversing the syntax tree
+function isCompoundState(graphObj){
+  return graphObj['@_yfiles.foldertype']==='group'
+}
+
+const atomicStateLens = lensPath(['y:ShapeNode', 'y:NodeLabel', '#text']);
+const compoundStateLens = lensPath(['y:ProxyAutoBoundsNode', 'y:Realizers', 'y:GroupNode', 'y:NodeLabel', '#text']);
+
+const getLabel = graphObj => {
+  const graphData = graphObj.data;
+  const lens = isCompoundState(graphObj) ? compoundStateLens : atomicStateLens;
+  const dataKeys = Array.isArray(graphData)
+    ? graphData.reduce((acc, dataItem) => {
+      return Object.assign(acc, {[dataItem['@_key']]: view(lens, dataItem)})
+    },{})
+    : graphData['@_key'] === 'd6'
+      ? {d6: view(lens, graphData)}
+      : {};
+  const stateLabel = dataKeys.d6 || "";
+
+  return [graphObj['@_id'], stateLabel]
+};
+const getChildren = graphObj => graphObj.graph ? graphObj.graph.node : [];
+const constructStateHierarchy= (label, children) => {
+  const _label = label.join(STATE_LABEL_SEP);
+  return children && children.length === 0
+    ? {[_label]: ""}
+    : {[_label]: mergeAll(children)}
+};
+const constructStateYed2KinglyMap = (label, children) => {
+  return children && children.length === 0
+    ? {[label[0]]: label[1]}
+    : mergeAll(children)
+};
+const stateHierarchyLens = {
+  getLabel,
+  getChildren,
+  constructTree: constructStateHierarchy,
+};
+const stateYed2KinglyLens = {
+  getLabel,
+  getChildren,
+  constructTree: constructStateYed2KinglyMap,
+};
+const {graphml: graphObj} = parser.parse(yedString, {ignoreAttributes: false});
+const stateHierarchy = mapOverTree(stateHierarchyLens, x=>x, graphObj);
+const stateYed2KinglyMap = mapOverTree(stateYed2KinglyLens, x=>x, graphObj);
 
 ```
 

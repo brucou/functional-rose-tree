@@ -1,8 +1,8 @@
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
   typeof define === 'function' && define.amd ? define(['exports'], factory) :
-  (factory((global.Rosetree = {})));
-}(this, (function (exports) { 'use strict';
+  (global = global || self, factory(global.Rosetree = {}));
+}(this, function (exports) { 'use strict';
 
   const PATH_ROOT = [0];
   const POST_ORDER = "POST_ORDER";
@@ -453,27 +453,27 @@
     return newTreeStruct.get(stringify(PATH_ROOT));
   }
 
+  exports.BFS = BFS;
   exports.POST_ORDER = POST_ORDER;
   exports.PRE_ORDER = PRE_ORDER;
-  exports.BFS = BFS;
   exports.SEP = SEP;
-  exports.visitTree = visitTree;
+  exports.arrayTreeLenses = arrayTreeLenses;
   exports.breadthFirstTraverseTree = breadthFirstTraverseTree;
-  exports.preorderTraverseTree = preorderTraverseTree;
-  exports.postOrderTraverseTree = postOrderTraverseTree;
-  exports.reduceTree = reduceTree;
   exports.forEachInTree = forEachInTree;
-  exports.mapOverTree = mapOverTree;
-  exports.pruneWhen = pruneWhen;
   exports.getHashedTreeLenses = getHashedTreeLenses;
   exports.mapOverHashTree = mapOverHashTree;
-  exports.objectTreeLenses = objectTreeLenses;
   exports.mapOverObj = mapOverObj;
-  exports.traverseObj = traverseObj;
-  exports.arrayTreeLenses = arrayTreeLenses;
+  exports.mapOverTree = mapOverTree;
+  exports.objectTreeLenses = objectTreeLenses;
+  exports.postOrderTraverseTree = postOrderTraverseTree;
+  exports.preorderTraverseTree = preorderTraverseTree;
+  exports.pruneWhen = pruneWhen;
+  exports.reduceTree = reduceTree;
   exports.switchTreeDataStructure = switchTreeDataStructure;
+  exports.traverseObj = traverseObj;
+  exports.visitTree = visitTree;
 
   Object.defineProperty(exports, '__esModule', { value: true });
 
-})));
+}));
 //# sourceMappingURL=rosetree.umd.js.map
