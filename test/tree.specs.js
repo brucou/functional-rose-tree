@@ -35,12 +35,16 @@ const lenses = {
   getChildren: tree => tree.children || [],
   constructTree: (label, children) => ({ label, children })
 };
+const emptyArray = [];
 const traverse = {
-  seed: [],
-  visit: (result, traversalState, tree) => {
-    result.push(lenses.getLabel(tree));
-    return result;
-  }
+  accumulator: {
+    empty: () => emptyArray, 
+    accumulate: (a,b) => a.concat(b == emptyArray ? [] : [b])
+  },
+  visit: (traversalState, subTreeLabel, subTreeChildren) => {
+    return {value: subTreeLabel, children: subTreeChildren}
+  },
+  finalize: x => x 
 };
 
 QUnit.module("Testing tree traversal", {});
@@ -116,7 +120,6 @@ QUnit.test("main case - forEachInTree", function exec_test(assert) {
   const actual = traces;
   const expected = [
     {
-      "isAdded": true,
       "isVisited": false,
       "path": [
         0,
@@ -125,7 +128,6 @@ QUnit.test("main case - forEachInTree", function exec_test(assert) {
     },
     "left",
     {
-      "isAdded": true,
       "isVisited": false,
       "path": [
         0,
@@ -135,7 +137,6 @@ QUnit.test("main case - forEachInTree", function exec_test(assert) {
     },
     "midleft",
     {
-      "isAdded": true,
       "isVisited": false,
       "path": [
         0,
@@ -145,7 +146,6 @@ QUnit.test("main case - forEachInTree", function exec_test(assert) {
     },
     "midright",
     {
-      "isAdded": true,
       "isVisited": true,
       "path": [
         0,
@@ -154,7 +154,6 @@ QUnit.test("main case - forEachInTree", function exec_test(assert) {
     },
     "middle",
     {
-      "isAdded": true,
       "isVisited": false,
       "path": [
         0,
@@ -163,7 +162,6 @@ QUnit.test("main case - forEachInTree", function exec_test(assert) {
     },
     "right",
     {
-      "isAdded": true,
       "isVisited": true,
       "path": [
         0
@@ -296,13 +294,14 @@ QUnit.test("main case - object traversal - BFS traverse", function exec_test(ass
   const lenses = objectTreeLenses;
   const traverse = {
     strategy: BFS,
-    seed: [],
-    visit: (result, traversalState, tree) => {
-      const label = lenses.getLabel(tree);
-      result.push(label);
-
-      return result;
-    }
+    accumulator: {
+      empty: () => emptyArray, 
+      accumulate: (a,b) => a.concat(b == emptyArray ? [] : [b])
+    },
+    visit: (traversalState, subTreeLabel, subTreeChildren) => {
+      return {value: subTreeLabel, children: subTreeChildren}
+    },
+    finalize: x => x,
   };
 
   const obj = {
@@ -400,13 +399,14 @@ QUnit.test("main case - object traversal - preorder traverse", function exec_tes
   const lenses = objectTreeLenses;
   const traverse = {
     strategy: PRE_ORDER,
-    seed: [],
-    visit: (result, traversalState, tree) => {
-      const label = lenses.getLabel(tree);
-      result.push(label);
-
-      return result;
-    }
+    accumulator: {
+      empty: () => emptyArray, 
+      accumulate: (a,b) => a.concat(b == emptyArray ? [] : [b])
+    },
+    visit: (traversalState, subTreeLabel, subTreeChildren) => {
+      return {value: subTreeLabel, children: subTreeChildren}
+    },
+    finalize: x => x,
   };
 
   const obj = {
@@ -504,13 +504,14 @@ QUnit.test("main case - object traversal - post-order traverse", function exec_t
   const lenses = objectTreeLenses;
   const traverse = {
     strategy: POST_ORDER,
-    seed: [],
-    visit: (result, traversalState, tree) => {
-      const label = lenses.getLabel(tree);
-      result.push(label);
-
-      return result;
-    }
+    accumulator: {
+      empty: () => emptyArray, 
+      accumulate: (a,b) => a.concat(b == emptyArray ? [] : [b])
+    },
+    visit: (traversalState, subTreeLabel, subTreeChildren) => {
+      return {value: subTreeLabel, children: subTreeChildren}
+    },
+    finalize: x => x,
   };
 
   const obj = {
@@ -609,16 +610,14 @@ QUnit.test("main case - hashed-tree traversal - traverse", function exec_test(as
   const lenses = getHashedTreeLenses('.');
 
   const traverse = {
-    seed: [],
-    visit: (result, traversalState, obj) => {
-      result.push(traversalState.get(obj).path + `: ${obj.hash[obj.cursor]}`);
-
-      return result
-    }
-  }
-
-  function traverseHashedTree(lenses, traverse, obj) {
-    return breadthFirstTraverseTree(lenses, traverse, obj)
+    accumulator: {
+      empty: () => emptyArray, 
+      accumulate: (a,b) => a.concat(b == emptyArray ? [] : [b])
+    },
+    visit: (traversalState, treeLabel, treeChildren, tree) => {
+      return {value: traversalState.get(tree).path + `: ${tree.hash[tree.cursor]}`, children: treeChildren}
+    },
+    finalize: x => x,
   }
 
   const hash = {
@@ -643,7 +642,7 @@ QUnit.test("main case - hashed-tree traversal - traverse", function exec_test(as
     }
   ;
 
-  const actual = traverseHashedTree(lenses, traverse, obj);
+  const actual = breadthFirstTraverseTree(lenses, traverse, obj);
   const expected = [
     "0: root",
     "0,0: combinatorName",
