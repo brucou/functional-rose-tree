@@ -615,12 +615,15 @@ QUnit.test("main case - hashed-tree traversal - traverse", function exec_test(as
       accumulate: (a,b) => a.concat(b == emptyArray ? [] : [b])
     },
     visit: (traversalState, treeLabel, treeChildren, tree) => {
-      return {value: traversalState.get(tree).path + `: ${tree.hash[tree.cursor]}`, children: treeChildren}
+      return {
+        value: Object.keys(treeLabel)[0] + `: ${Object.values(treeLabel)[0]}`,
+         children: treeChildren
+        }
     },
     finalize: x => x,
   }
 
-  const hash = {
+  const indices = {
     "0": "root",
     "0.0": "combinatorName",
     "0.1": "componentName",
@@ -637,34 +640,34 @@ QUnit.test("main case - hashed-tree traversal - traverse", function exec_test(as
     "0.2.1.1.0": "key"
   };
   const obj = {
-      cursor: "0",
-      hash
+      index: "0",
+      indices
     }
   ;
 
   const actual = breadthFirstTraverseTree(lenses, traverse, obj);
   const expected = [
     "0: root",
-    "0,0: combinatorName",
-    "0,1: componentName",
-    "0,2: emits",
-    "0,3: id",
-    "0,4: logType",
-    "0,5: path",
-    "0,6: settings",
-    "0,2,0: identifier",
-    "0,2,1: notification",
-    "0,2,2: type",
-    "0,2,1,0: kind",
-    "0,2,1,1: value",
-    "0,2,1,1,0: key"
+    "0.0: combinatorName",
+    "0.1: componentName",
+    "0.2: emits",
+    "0.3: id",
+    "0.4: logType",
+    "0.5: path",
+    "0.6: settings",
+    "0.2.0: identifier",
+    "0.2.1: notification",
+    "0.2.2: type",
+    "0.2.1.0: kind",
+    "0.2.1.1: value",
+    "0.2.1.1.0: key"
   ];
 
   assert.deepEqual(actual, expected, `Works!`);
 });
 
 QUnit.test("main case - hashed-tree traversal - map over", function exec_test(assert) {
-  const hash = {
+  const indices = {
     "0": "root",
     "0.0": "combinatorName",
     "0.1": "componentName",
@@ -677,7 +680,7 @@ QUnit.test("main case - hashed-tree traversal - map over", function exec_test(as
     "0.2.1.1": "value",
     "0.2.1.1.0": "key"
   };
-  const hash_orig = {
+  const indices_orig = {
     "0": "root",
     "0.0": "combinatorName",
     "0.1": "componentName",
@@ -691,15 +694,17 @@ QUnit.test("main case - hashed-tree traversal - map over", function exec_test(as
     "0.2.1.1.0": "key"
   };
   const obj = {
-      cursor: "0",
-      hash
+      index: "0",
+      indices
     }
   ;
 
-  const actual = mapOverHashTree('.', label => 'M-' + label, obj);
+  const actual = mapOverHashTree('.', 
+  (label) => 'M-' + label,
+   obj);
   const expected = {
-    "cursor": "0",
-    "hash": {
+    "index": "0",
+    "indices": {
       "0": "M-root",
       "0.0": "M-combinatorName",
       "0.1": "M-componentName",
@@ -715,7 +720,7 @@ QUnit.test("main case - hashed-tree traversal - map over", function exec_test(as
   };
 
   assert.deepEqual(actual, expected, `Works!`);
-  assert.deepEqual(hash, hash_orig, `Works!`);
+  assert.deepEqual(indices, indices_orig, `Works!`);
 });
 
 QUnit.test("main case - array tree traversal - traverse", function exec_test(assert) {

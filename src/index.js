@@ -62,7 +62,6 @@ function updateTraversalState(traversalState, subTree, subTreeChildren) {
 ///// Core API
 export function visitTree(traversalSpecs, tree) {
   debugger
-  // TODO DOC: monoid will have a 0 constructor and + function to accumulate results
   const { store, lenses, traverse } = traversalSpecs;
   const {
     // TODO: it is a function now, so review all tests! which leads to review all impl. 
@@ -103,7 +102,6 @@ export function visitTree(traversalSpecs, tree) {
     // TODO: update signature and doc for add function
     // TODO: then refactor to have the subTree as second argument?
     add(children, currentStore, traversalState, subTree);
-    // TODO: refactor in one function
   }
 
   // Compute the final result
@@ -149,7 +147,6 @@ export function preorderTraverseTree(lenses, traverse, tree) {
 // TODO DOC: cannot short circuit node traversal when using postOrder, as it goes bottom up, it is too late to remove children, or even add children
 export function postOrderTraverseTree(lenses, traverse, tree) {
   const { getChildren } = lenses;
-  // TODO remove traversalStaete from here, where do I need it?
   const isLeaf = tree => getChildren(tree).length === 0;
   const predicate = (tree, traversalState) => traversalState.get(tree).isVisited || isLeaf(tree);
   const { accumulator, visit, finalize } = traverse;
@@ -254,32 +251,45 @@ export function forEachInTree(lenses, traverse, tree) {
  * @returns {*}
  */
 export function mapOverTree(lenses, mapFn, tree) {
-  const { getChildren, constructTree, getLabel } = lenses;
-  const getChildrenNumber = (tree, traversalState) =>
-    getChildren(tree, traversalState).length;
+  const { constructTree } = lenses;
   const stringify = (path) => path.join(SEP);
+  const zeroMap = {}; // !!! this map object serves also as zero for the accumulator
   const treeTraverse = {
-    seed: () => Map,
-    visit: (pathMap, traversalState, tree) => {
+    accumulator: {
+      empty: () => zeroMap,
+      accumulate: (map, b) => {
+        debugger
+        if (b == zeroMap) return map
+        const {index: parentIndex, mappedLabel, childrenNumber: n} = b;
+        const mappedChildren = times(
+          childIndex => map[stringify([parentIndex, childIndex])],
+          n
+        );
+        const mappedTree = constructTree(mappedLabel, mappedChildren);
+        map[parentIndex] = mappedTree;
+        return map
+      }
+    },
+    visit: (traversalState, treeLabel, treeChildren, tree) => {
       const { path } = traversalState.get(tree);
       // Paths are *stringified* because Map with non-primitive objects uses referential equality
-      const mappedLabel = mapFn(getLabel(tree));
-      const mappedChildren = times(
-        (index) => pathMap.get(stringify(path.concat(index))),
-        getChildrenNumber(tree, traversalState)
-      );
-      const mappedTree = constructTree(mappedLabel, mappedChildren);
+      const mappedLabel = mapFn(treeLabel);
 
-      pathMap.set(stringify(path), mappedTree);
-
-      return pathMap;
-    }
+      return { 
+        value: { 
+          index: stringify(path), 
+          mappedLabel, 
+          childrenNumber: treeChildren.length 
+        }, 
+        children: treeChildren 
+      };
+    },
+    // At the end of the accumulation, the root contains the whole reconstructed tree
+    finalize: map => map[PATH_ROOT]
   };
-  const pathMap = postOrderTraverseTree(lenses, treeTraverse, tree);
-  const mappedTree = pathMap.get(stringify(PATH_ROOT));
-  pathMap.clear();
-
-  return mappedTree;
+  
+  // We reconstruct the tree bottom up so we need a post order traversal
+  return postOrderTraverseTree(lenses, treeTraverse, tree);
 }
 
 /**
@@ -316,45 +326,92 @@ export function pruneWhen(lenses, predicate, tree) {
 // Examples of lenses
 
 // HashedTreeLenses
-// TODO: refactor, the label should be only hash[cursor] and construct tree should overwrite the hash in the children, get the parent from the children's cursor 
-// TODO: actually do not overwrite the hash, create a new one, and adjust all the children hash too to that new one, but then what of the children's children??
-// TODO: this is probably not a well behaved lens...
-// TODO mapOverTree is fine, rather than merging for non-destructive updates, I could just shallow clone the hash before hand, and do the destructive updates in the lens
+// Concrete shape:
+// const index = "0";
+// const indices = {
+//   "0": "root",
+//   "0.0": "combinatorName",
+//   "0.1": "componentName",
+//   "0.2": "emits",
+//   "0.3": "id",
+//   "0.2.0": "identifier",
+//   "0.2.1": "notification",
+// };
+// {index, indices}:: {indices:: Object String *, index:: String}
 export function getHashedTreeLenses(sep) {
-  function makeChildCursor(parentCursor, childIndex, sep) {
+  function destructureHashTreeLabel(label){
+    return {
+      index: Object.keys(label)[0],
+      value: Object.values(label)[0]
+    }
+  }
+
+  function makeChildIndex(parentCursor, childIndex, sep) {
     return [parentCursor, childIndex].join(sep);
   }
 
+  function makeParentIndex(childIndex, sep){
+    const indexSequence = childIndex.split(sep); 
+    return indexSequence.length <= 1
+    ? void 0 // no parent - either the cursor is already at the root (length = 1) or malformed input
+    : indexSequence.slice(0, -1).join(sep);
+  }
+
   return {
-    getLabel: (tree) => {
-      const { cursor, hash } = tree;
-      return { label: hash[cursor], hash, cursor };
+// Label: {[index]: value} where value is indices.at(index)
+// Both values are necessary to build a parent tree from its children.
+// When looking at a leaf, we need to know the index/path that corresponds to the leaf in the tree
+// We then know the index/path for the parent
+getLabel: (tree) => {
+      const { index, indices } = tree;
+      return {[index]: indices[index]};
     },
     getChildren: (tree) => {
-      const { cursor, hash } = tree;
+      const { index: parentIndex, indices } = tree;
       let childIndex = 0;
       let children = [];
 
-      while (makeChildCursor(cursor, childIndex, sep) in hash) {
+      while (makeChildIndex(parentIndex, childIndex, sep) in indices) {
         children.push({
-          cursor: makeChildCursor(cursor, childIndex, sep),
-          hash
+          index: makeChildIndex(parentIndex, childIndex, sep),
+          indices
         });
         childIndex++;
       }
 
       return children;
     },
-    constructTree: (label, children) => {
-      const { label: value, hash, cursor } = label;
+constructTree: (label, children) => {
+      const { index, value } = destructureHashTreeLabel(label);
+
+      if (children.length === 0) {
+        return {
+          index,
+          indices: {[index]: value}
+        }
+      }
+
+      const parentIndexFirstChild = makeParentIndex(children[0].index, sep);
+      if (children.some(child => makeParentIndex(child.index, sep)!== parentIndexFirstChild)){
+        throw `Invariant not fulfilled: all children must have an index derived from the same parent index!/n Children indices: ${children.reduce((acc, c) => [acc, c.index].join("; "),"")}`
+      }
+
+// Property:
+// - For any tree, `indices` from parent include `indices` from children for every child
+// Hence, when applying post order traversal to reconstruct the tree, taking the reconstructed root
+// will have the totality of the information stored in the children
+const indices = children.reduce((indices, child) => {
+        const { indices: childIndices } = child;
+        Object.assign(indices, childIndices);
+        return indices
+      }, {});
+
+      indices[parentIndexFirstChild] = value;
 
       return {
-        cursor: cursor,
-        hash: merge(
-          children.reduce((acc, child) => merge(acc, child.hash), {}),
-          { [cursor]: value }
-        )
-      };
+        index,
+        indices
+      }
     }
   };
 }
@@ -362,13 +419,12 @@ export function getHashedTreeLenses(sep) {
 export function mapOverHashTree(sep, mapFn, obj) {
   const lenses = getHashedTreeLenses(sep);
 
+  // I need to change the visit to store the mapped tree in traversal state not in visitAcc to which I don't access to in `visit`
+  // So I need my own visit here, not the visit of mapOverTree?
+
   return mapOverTree(
     lenses,
-    ({ label, hash, cursor }) => ({
-      label: mapFn(label),
-      hash,
-      cursor
-    }),
+    (obj) => ({[Object.keys(obj)[0]]: mapFn(Object.values(obj)[0])}),
     obj
   );
 }
@@ -556,8 +612,6 @@ export function switchTreeDataStructure(originLenses, targetLenses, tree) {
 
 // const actual = postOrderTraverseTree(lenses, traverse, tree);
 // console.log(actual);
-
-// TODO: correct the test with postorder first!! then try to understand why it fails
 
 // TODO:
 // - get at (index) returns a maybe - define a symbol for Nothing
