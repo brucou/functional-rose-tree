@@ -258,7 +258,6 @@ export function mapOverTree(lenses, mapFn, tree) {
     accumulator: {
       empty: () => zeroMap,
       accumulate: (map, b) => {
-        debugger
         if (b == zeroMap) return map
         const {index: parentIndex, mappedLabel, childrenNumber: n} = b;
         const mappedChildren = times(
@@ -303,7 +302,10 @@ export function mapOverTree(lenses, mapFn, tree) {
  * @returns tree
  */
 export function pruneWhen(lenses, predicate, tree) {
-  // As we need to return a tree, it will be convenient to use mapOverTree
+// TODO: probably need to write entirely new
+// can't do a post order, that would mean traversing the whole tree when I want to prune it
+// Do a preorder traversal, with a visit that drops children!
+// then rebuild the tree just like mapOver does, that part should be identical?
   const { getChildren } = lenses;
   const pruneLenses = merge(lenses, {
     getChildren: (tree, traversalState) => {
@@ -418,9 +420,6 @@ const indices = children.reduce((indices, child) => {
 
 export function mapOverHashTree(sep, mapFn, obj) {
   const lenses = getHashedTreeLenses(sep);
-
-  // I need to change the visit to store the mapped tree in traversal state not in visitAcc to which I don't access to in `visit`
-  // So I need my own visit here, not the visit of mapOverTree?
 
   return mapOverTree(
     lenses,
@@ -550,68 +549,11 @@ export const arrayTreeLenses = {
 export function switchTreeDataStructure(originLenses, targetLenses, tree) {
   const { getLabel, getChildren } = originLenses;
   const { constructTree } = targetLenses;
-  const getChildrenNumber = (tree, traversalState) =>
-    getChildren(tree, traversalState).length;
+  const mixedLenses = { getLabel, getChildren, constructTree }
 
-  const traverse = {
-    seed: () => Map,
-    visit: (pathMap, traversalState, tree) => {
-      const { path } = traversalState.get(tree);
-      const label = getLabel(tree);
-      const children = times(
-        (index) => pathMap.get(stringify(path.concat(index))),
-        getChildrenNumber(tree, traversalState)
-      );
-      pathMap.set(stringify(path), constructTree(label, children));
-
-      return pathMap;
-    }
-  };
-
-  const newTreeStruct = postOrderTraverseTree(originLenses, traverse, tree);
-  return newTreeStruct.get(stringify(PATH_ROOT));
+  const newTreeStruct = mapOverTree(mixedLenses, x => x, tree);
+  return newTreeStruct;
 }
-
-// const tree = {
-//   label: 40,
-//   children: [
-//     {
-//       label: 30,
-//       children: [
-//         { label: 25, children: [{ label: 15 }, { label: 28 }] },
-//         { label: 35 }
-//       ]
-//     },
-//     {
-//       label: 50,
-//       children: [
-//         { label: 45 },
-//         { label: 60, children: [{ label: 55 }, { label: 70 }] }
-//       ]
-//     }
-//   ]
-// };
-// const lenses = {
-//   getLabel: (tree) => tree.label,
-//   getChildren: (tree) => tree.children || [],
-//   constructTree: (label, children) => ({ label, children })
-// };
-// const traverse = {
-//   accumulator: {
-//     empty: () => [], 
-//     accumulate: (a, b) => a ? a.concat([b]) : [b]
-//   },
-//   visit: (traversalState, subTreeLabel, subTreeChildren) => {
-//     return {
-//       value: subTreeLabel,
-//       children: subTreeChildren
-//       }
-//   },
-//   finalize: x => x
-// };
-
-// const actual = postOrderTraverseTree(lenses, traverse, tree);
-// console.log(actual);
 
 // TODO:
 // - get at (index) returns a maybe - define a symbol for Nothing

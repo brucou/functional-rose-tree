@@ -726,26 +726,30 @@ QUnit.test("main case - hashed-tree traversal - map over", function exec_test(as
 QUnit.test("main case - array tree traversal - traverse", function exec_test(assert) {
   const lenses = arrayTreeLenses;
 
-  const traverse = {
-    seed: [],
-    visit: (result, traversalState, tree) => {
+  const arrayTreeTraverse = {
+    accumulator: {
+      empty: () => emptyArray, 
+      accumulate: (a,b) => a.concat(b == emptyArray ? [] : [b])
+    },
+    visit: (traversalState, treeLabel, treeChildren, tree) => {
       const path = traversalState.get(tree).path;
-      const parentLabel = lenses.getLabel(tree);
-      const children = lenses.getChildren(tree);
-      const graphNodes = children.map(child => {
+      const graphNodes = treeChildren.map(child => {
         return {
           data: {
             id: [lenses.getLabel(child), path.join('.')].join('.'),
             label: lenses.getLabel(child),
-            parent: parentLabel
+            parent: treeLabel
           }
         }
       });
-
-      return result.concat(graphNodes)
-    }
+  
+      return {value: graphNodes, children: treeChildren}
+    },
+    // We are concatenating arrays (cf. accumulate, b is an array).
+    // We flatten that for (slightly) easier test case writing
+    finalize: x => x.flat() 
   }
-
+  
   const arrayTree = ['root', [
     ['no_cd_loaded', [
       "cd_drawer_closed",
@@ -766,7 +770,7 @@ QUnit.test("main case - array tree traversal - traverse", function exec_test(ass
     ]]
   ]];
 
-  const actual = breadthFirstTraverseTree(lenses, traverse, arrayTree);
+  const actual = breadthFirstTraverseTree(lenses, arrayTreeTraverse, arrayTree);
   const expected = [
     {
       "data": {
@@ -889,13 +893,17 @@ QUnit.test("main case - array tree traversal - postorder traversal", function ex
   const lenses = arrayTreeLenses;
 
   const traverse = {
-    seed: [],
-    visit: (result, traversalState, tree) => {
+    accumulator: {
+      empty: () => emptyArray, 
+      accumulate: (a,b) => a.concat(b == emptyArray ? [] : [b])
+    },
+    finalize: x => x,
+    visit: (traversalState, treeLabel, treeChildren, tree) => {
       const path = traversalState.get(tree).path;
-      const label = lenses.getLabel(tree);
-      const children = lenses.getChildren(tree);
+      const label = treeLabel;
+      const children = treeChildren;
 
-      return result.concat({ path, label, children })
+      return {value: { path, label, children }, children: treeChildren}
     }
   }
 
@@ -1115,26 +1123,30 @@ QUnit.test("main case - bfsOrderTraverseTree - label tree - identical labels", f
 QUnit.test("main case - preorder array tree traversal - traverse - identical labels", function exec_test(assert) {
   const lenses = arrayTreeLenses;
 
-  const traverse = {
-    seed: [],
-    visit: (result, traversalState, tree) => {
+  const arrayTreeTraverse = {
+    accumulator: {
+      empty: () => emptyArray, 
+      accumulate: (a,b) => a.concat(b == emptyArray ? [] : [b])
+    },
+    visit: (traversalState, treeLabel, treeChildren, tree) => {
       const path = traversalState.get(tree).path;
-      const parentLabel = lenses.getLabel(tree);
-      const children = lenses.getChildren(tree);
-      const graphNodes = children.map(child => {
+      const graphNodes = treeChildren.map(child => {
         return {
           data: {
             id: [lenses.getLabel(child), path.join('.')].join('.'),
             label: lenses.getLabel(child),
-            parent: parentLabel
+            parent: treeLabel
           }
         }
       });
-
-      return result.concat(graphNodes)
-    }
+  
+      return {value: graphNodes, children: treeChildren}
+    },
+    // We are concatenating arrays (cf. accumulate, b is an array).
+    // We flatten that for (slightly) easier test case writing
+    finalize: x => x.flat() 
   }
-
+  
   const arrayTree = ['root', [
     ['no_cd_loaded', [
       "cd_drawer_closed",
@@ -1155,7 +1167,7 @@ QUnit.test("main case - preorder array tree traversal - traverse - identical lab
     ]]
   ]];
 
-  const actual = breadthFirstTraverseTree(lenses, traverse, arrayTree);
+  const actual = breadthFirstTraverseTree(lenses, arrayTreeTraverse, arrayTree);
   const expected = [
     {
       "data": {
@@ -1256,26 +1268,30 @@ QUnit.test("main case - preorder array tree traversal - traverse - identical lab
 QUnit.test("main case - postorder tree traversal - traverse - identical labels", function exec_test(assert) {
   const lenses = arrayTreeLenses;
 
-  const traverse = {
-    seed: [],
-    visit: (result, traversalState, tree) => {
+  const arrayTreeTraverse = {
+    accumulator: {
+      empty: () => emptyArray, 
+      accumulate: (a,b) => a.concat(b == emptyArray ? [] : [b])
+    },
+    visit: (traversalState, treeLabel, treeChildren, tree) => {
       const path = traversalState.get(tree).path;
-      const parentLabel = lenses.getLabel(tree);
-      const children = lenses.getChildren(tree);
-      const graphNodes = children.map(child => {
+      const graphNodes = treeChildren.map(child => {
         return {
           data: {
             id: [lenses.getLabel(child), path.join('.')].join('.'),
             label: lenses.getLabel(child),
-            parent: parentLabel
+            parent: treeLabel
           }
         }
       });
-
-      return result.concat(graphNodes)
-    }
+  
+      return {value: graphNodes, children: treeChildren}
+    },
+    // We are concatenating arrays (cf. accumulate, b is an array).
+    // We flatten that for (slightly) easier test case writing
+    finalize: x => x.flat() 
   }
-
+  
   const arrayTree = ['root', [
     ['no_cd_loaded', [
       "cd_drawer_closed",
@@ -1296,7 +1312,7 @@ QUnit.test("main case - postorder tree traversal - traverse - identical labels",
     ]]
   ]];
 
-  const actual = postOrderTraverseTree(lenses, traverse, arrayTree);
+  const actual = postOrderTraverseTree(lenses, arrayTreeTraverse, arrayTree);
   const expected = [
     {
       "data": {
